@@ -34,7 +34,8 @@ DATAVERSE_FILES = {
 WDI_INDICATORS = {
     "NY.GDP.MKTP.KD.ZG": "wdi_gdp_growth_annual_pct",
     "SP.POP.TOTL": "wdi_population",
-    "NE.TRD.GNFS.ZS": "wdi_trade_gdp",
+    "NE.EXP.GNFS.ZS": "wdi_exports_gdp",
+    "NE.IMP.GNFS.ZS": "wdi_imports_gdp",
     "NE.GDI.FTOT.ZS": "wdi_investment_gdp",
     "NV.AGR.TOTL.ZS": "wdi_agriculture_value_added_gdp",
     "NV.IND.TOTL.ZS": "wdi_industry_value_added_gdp",

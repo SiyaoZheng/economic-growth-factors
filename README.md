@@ -26,6 +26,11 @@ Or run the full sequence:
 python3 scripts/run_pipeline.py
 ```
 
+## Git Automation
+
+This repository is configured for guarded local autosnapshots every 15 minutes.
+See `docs/git_automation.md` for the safety rules, logs, and manual commands.
+
 ## Outputs
 
 - `data/processed/outcome_panel_1960plus.parquet`

@@ -221,6 +221,13 @@ def clean_wdi() -> pl.DataFrame:
         .pivot(index=["iso3", "country_wdi", "year"], on="variable", values="value", aggregate_function="first")
         .sort(["iso3", "year"])
     )
+    if {"wdi_exports_gdp", "wdi_imports_gdp"}.issubset(set(wide.columns)):
+        wide = wide.with_columns(
+            pl.when(pl.col("wdi_exports_gdp").is_not_null() & pl.col("wdi_imports_gdp").is_not_null())
+            .then(pl.col("wdi_exports_gdp") + pl.col("wdi_imports_gdp"))
+            .otherwise(None)
+            .alias("wdi_trade_gdp")
+        )
     wide.write_parquet(DATA_INTERIM / "wdi_clean.parquet")
     wide.write_csv(DATA_INTERIM / "wdi_clean.csv")
     return wide
