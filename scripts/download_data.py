@@ -17,7 +17,7 @@ from config import (
     DATAVERSE_FILES,
     DATA_RAW,
     END_YEAR,
-    LAG_BUFFER_START_YEAR,
+    START_YEAR,
     WDI_INDICATORS,
     ensure_dirs,
 )
@@ -101,6 +101,7 @@ def download_file(session: requests.Session, url: str, dest: Path, force: bool =
 def download_dataverse_sources(session: requests.Session, force: bool) -> dict[str, Any]:
     manifest: dict[str, Any] = {}
     for source_name, spec in DATAVERSE_FILES.items():
+        print(f"Downloading Dataverse source: {source_name} ({spec['filename']})", flush=True)
         file_id = get_dataverse_file_id(session, spec["persistent_id"], spec["filename"])
         url = f"{DATAVERSE_API}/access/datafile/{file_id}"
         result = download_file(session, url, spec["raw_path"], force=force)
@@ -121,6 +122,7 @@ def fetch_wdi_country_metadata(session: requests.Session, force: bool) -> dict[s
     if dest.exists() and not force:
         payload = json.loads(dest.read_text(encoding="utf-8"))
     else:
+        print("Downloading WDI country metadata", flush=True)
         url = "https://api.worldbank.org/v2/country"
         response = session.get(url, params={"format": "json", "per_page": 400}, timeout=90)
         response.raise_for_status()
@@ -151,15 +153,35 @@ def fetch_wdi_indicator(
             "variable": variable,
         }
 
+    print(f"Downloading WDI indicator: {indicator} -> {variable}", flush=True)
     url = f"https://api.worldbank.org/v2/country/all/indicator/{indicator}"
-    params = {
-        "format": "json",
-        "per_page": 20000,
-        "date": f"{LAG_BUFFER_START_YEAR}:{END_YEAR}",
-    }
-    response = session.get(url, params=params, timeout=120)
-    response.raise_for_status()
-    payload = response.json()
+    per_page = 1000
+    page = 1
+    metadata: dict[str, Any] | None = None
+    rows: list[dict[str, Any]] = []
+    while True:
+        params = {
+            "format": "json",
+            "per_page": per_page,
+            "page": page,
+            "date": f"{START_YEAR}:{END_YEAR}",
+        }
+        response = session.get(url, params=params, timeout=120)
+        if response.status_code >= 400:
+            raise RuntimeError(
+                f"WDI request failed for {indicator} with {response.status_code}: {response.text[:500]}"
+            )
+        payload = response.json()
+        if not isinstance(payload, list) or len(payload) < 2:
+            raise RuntimeError(f"Unexpected WDI payload for {indicator}: {str(payload)[:500]}")
+        metadata = payload[0]
+        rows.extend(payload[1] or [])
+        pages = int(metadata.get("pages") or 1)
+        if page >= pages:
+            break
+        page += 1
+        time.sleep(0.15)
+    payload = [metadata or {}, rows]
     write_json(dest, payload)
     time.sleep(0.3)
     return {
