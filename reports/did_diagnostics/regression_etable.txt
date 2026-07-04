@@ -1,0 +1,38 @@
+
+\begingroup
+\centering
+\begin{tabular}{lcccc}
+   \tabularnewline \midrule \midrule
+   Dependent Variable: & \multicolumn{4}{c}{growth\_pct}\\
+                                        & 仅固定效应     & + 人力资本     & + 投资率       & + TFP+贸易 \\   
+   Model:                               & (1)            & (2)            & (3)            & (4)\\  
+   \midrule
+   \emph{Variables}\\
+   log\_total\_rmax                     & -0.0770$^{**}$ & -0.0771$^{**}$ & -0.0789$^{**}$ & -0.0621$^{*}$\\   
+                                        & (0.0351)       & (0.0356)       & (0.0388)       & (0.0335)\\   
+   pwt\_human\_capital\_index\_lag1     &                & 8.271$^{**}$   & 8.866$^{**}$   & 0.3340\\   
+                                        &                & (4.097)        & (4.425)        & (3.598)\\   
+   pwt\_investment\_share\_lag1         &                &                & 11.73          & 8.965\\   
+                                        &                &                & (11.25)        & (6.855)\\   
+   pwt\_tfp\_lag1                       &                &                &                & -14.48$^{***}$\\   
+                                        &                &                &                & (4.018)\\   
+   pwt\_export\_share\_lag1             &                &                &                & -12.82$^{***}$\\   
+                                        &                &                &                & (4.554)\\   
+   pwt\_import\_share\_lag1             &                &                &                & -9.850$^{**}$\\   
+                                        &                &                &                & (4.213)\\   
+   \midrule
+   \emph{Fixed-effects}\\
+   unit\_id                             & Yes            & Yes            & Yes            & Yes\\  
+   year                                 & Yes            & Yes            & Yes            & Yes\\  
+   \midrule
+   \emph{Fit statistics}\\
+   Observations                         & 1,080          & 1,080          & 1,080          & 1,080\\  
+   R$^2$                                & 0.41556        & 0.41879        & 0.42344        & 0.49514\\  
+   Within R$^2$                         & 0.00200        & 0.00752        & 0.01545        & 0.13789\\  
+   \midrule \midrule
+   \multicolumn{5}{l}{\emph{Clustered (iso3) standard-errors in parentheses}}\\
+   \multicolumn{5}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+\end{tabular}
+\par\endgroup
+
+

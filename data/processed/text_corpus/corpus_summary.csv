@@ -1,0 +1,31 @@
+country,page_title,raw_chars,raw_words,sentence_count,token_count,unique_token_count
+United States,Economy of United States,2839,440,28,256,163
+China,Economy of China,2930,463,24,250,162
+Japan,Economy of Japan,2092,342,21,175,113
+Germany,Economy of Germany,3328,503,29,293,197
+India,Economy of India,2995,460,26,260,175
+United Kingdom,Economy of United Kingdom,3437,535,26,286,192
+France,Economy of France,3218,521,22,256,164
+Brazil,Economy of Brazil,3241,524,22,283,185
+Italy,Economy of Italy,4034,620,30,353,230
+Canada,Economy of Canada,4523,688,34,406,245
+South Korea,Economy of South Korea,2849,454,22,262,167
+Russia,Economy of Russia,2540,379,18,223,150
+Australia,Economy of Australia,2436,382,18,219,159
+Mexico,Economy of Mexico,2848,441,24,246,178
+Indonesia,Economy of Indonesia,1726,268,13,146,108
+Turkey,Economy of Turkey,2616,416,16,213,144
+Netherlands,Economy of Netherlands,3528,567,26,296,205
+Saudi Arabia,Economy of Saudi Arabia,1073,169,10,101,73
+Switzerland,Economy of Switzerland,701,110,6,60,45
+Nigeria,Economy of Nigeria,1514,242,12,130,93
+South Africa,Economy of South Africa,1616,247,14,139,95
+Vietnam,Economy of Vietnam,1624,253,13,144,110
+Argentina,Economy of Argentina,1047,160,8,91,82
+Egypt,Economy of Egypt,2207,334,16,191,144
+Thailand,Economy of Thailand,2519,393,19,212,127
+Poland,Economy of Poland,1890,301,17,159,109
+Chile,Economy of Chile,2432,375,18,204,154
+Ethiopia,Economy of Ethiopia,3034,469,24,258,184
+Bangladesh,Economy of Bangladesh,2436,372,23,213,153
+Singapore,Economy of Singapore,1251,178,9,112,92

@@ -1,45 +1,45 @@
-# 各国经济增长影响因素
+# 各国经济增长影响因素研究
 
-This repository builds a reproducible country-year panel for studying factors associated with national economic growth since 1960.
+构建 1960 年起的跨国-年份面板数据，研究各国经济增长的关联因素。目标期刊：《管理世界》级别。
 
-## Current Pipeline
+## 目录结构
 
-The first milestone downloads and processes:
+```
+data/                  # 数据（不纳入版本控制）
+├── raw/               #   原始数据（只读）
+│   ├── pwt/           #     Penn World Table 11.0
+│   ├── maddison/      #     Maddison Project Database 2023
+│   ├── wdi/           #     World Bank WDI JSON
+│   └── top500/        #     TOP500 HPC XML + raw JSON/parquet
+├── interim/           #   中间数据（清洗后、merge 前）
+└── processed/         #   最终分析面板
 
-- Penn World Table 11.0 (primary GDP per capita and economic structure source)
-- Maddison Project Database 2023 (long-run GDP per capita validation source)
-- World Bank WDI indicators (official growth, population, and economic controls)
-
-Planned follow-up modules are documented for V-Dem, QoG, CEPII GeoDist, Barro-Lee, and UN WPP.
-
-## Run
-
-```bash
-python3 scripts/download_data.py
-python3 scripts/build_panels.py
-python3 scripts/validate_outputs.py
+docs/                  # 项目文档、变量字典、文献矩阵、研究设计
+scripts/               # 所有分析脚本（Python + R）
+outputs/               # 所有输出（不纳入版本控制）
+├── figures/           #   图（DID 诊断图，png + pdf）
+├── tables/            #   回归表格（HTML）
+├── data_checks/       #   数据验证报告
+└── writing/           #   写作稿、审稿回复、演示
 ```
 
-Or run the full sequence:
+## 一键运行
 
 ```bash
-python3 scripts/run_pipeline.py
+# 完整管线（跳过下载，仅数据面板 + 回归表格 + DID 诊断图）
+python scripts/orchestrator.py
+
+# 含下载
+python scripts/orchestrator.py --download
+
+# 仅某一部分
+python scripts/orchestrator.py --data-only    # 数据面板 + 验证
+python scripts/orchestrator.py --table-only   # 回归表格 Table 1 + Table 2
+python scripts/orchestrator.py --did-only     # DID 诊断图
 ```
 
-## Git Automation
+## 运行依赖
 
-This repository is configured for guarded local autosnapshots every 15 minutes.
-See `docs/git_automation.md` for the safety rules, logs, and manual commands.
+Python (polars, requests, openpyxl, pyarrow) + R (arrow, fixest, modelsummary, tinytable, dplyr, ggplot2, gridExtra)。
 
-## Outputs
-
-- `data/processed/outcome_panel_1960plus.parquet`
-- `data/processed/outcome_panel_1960plus.csv`
-- `data/processed/growth_panel_1960plus.parquet`
-- `data/processed/growth_panel_1960plus.csv`
-- `docs/data_inventory.md`
-- `docs/variable_dictionary.csv`
-- `reports/coverage_report.html`
-- `reports/validation_report.md`
-
-Raw downloads are retained under `data/raw/` and are not edited by processing scripts.
+Python 依赖见 `requirements.txt`。

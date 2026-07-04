@@ -98,7 +98,7 @@ tab1 <- modelsummary(models_t1,
   coef_map    = coef_map_t1,
   gof_map     = gof_map,
   notes       = notes_t1,
-  title       = "Table 1. AI Compute Capacity and Economic Growth: Main Effect",
+  title       = "",
   output      = "tinytable"
 )
 
@@ -172,7 +172,7 @@ tab2 <- modelsummary(models_t2,
   coef_map    = coef_map_t2,
   gof_map     = gof_map,
   notes       = notes_t2,
-  title       = "Table 2. Channel Heterogeneity: Automation vs New-Task Exposure",
+  title       = "",
   output      = "tinytable"
 )
 

@@ -8,7 +8,7 @@ DATA_RAW = ROOT / "data" / "raw"
 DATA_INTERIM = ROOT / "data" / "interim"
 DATA_PROCESSED = ROOT / "data" / "processed"
 DOCS = ROOT / "docs"
-REPORTS = ROOT / "reports"
+OUTPUTS = ROOT / "outputs"
 
 START_YEAR = 1960
 LAG_BUFFER_START_YEAR = 1950
@@ -54,9 +54,14 @@ def ensure_dirs() -> None:
         DATA_RAW / "pwt",
         DATA_RAW / "maddison",
         DATA_RAW / "wdi",
+        DATA_RAW / "top500",
         DATA_INTERIM,
         DATA_PROCESSED,
         DOCS,
-        REPORTS,
+        OUTPUTS,
+        OUTPUTS / "figures",
+        OUTPUTS / "tables",
+        OUTPUTS / "data_checks",
+        OUTPUTS / "writing",
     ]:
         path.mkdir(parents=True, exist_ok=True)

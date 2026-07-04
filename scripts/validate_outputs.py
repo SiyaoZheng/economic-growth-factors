@@ -7,10 +7,10 @@ from pathlib import Path
 
 import polars as pl
 
-from config import DATA_PROCESSED, REPORTS, START_YEAR, ensure_dirs
+from config import DATA_PROCESSED, OUTPUTS, START_YEAR, ensure_dirs
 
 
-OUTPUTS = [
+OUTPUT_FILES = [
     DATA_PROCESSED / "outcome_panel_1960plus.parquet",
     DATA_PROCESSED / "outcome_panel_1960plus.csv",
     DATA_PROCESSED / "growth_panel_1960plus.parquet",
@@ -68,7 +68,7 @@ def write_extreme_growth(growth: pl.DataFrame) -> None:
         .select("iso3", "country", "year", "growth_annual", "gdp_pc", "population")
         .sort(["growth_annual"], descending=True)
     )
-    extreme.write_csv(REPORTS / "extreme_growth_annual.csv")
+    extreme.write_csv(OUTPUTS / "data_checks" / "extreme_growth_annual.csv")
 
 
 def write_source_consistency(growth: pl.DataFrame) -> dict[str, float | int | None]:
@@ -97,7 +97,7 @@ def write_source_consistency(growth: pl.DataFrame) -> dict[str, float | int | No
         large = comparisons.filter(
             (pl.col("abs_diff_maddison") > 0.10)
         ).sort(["abs_diff_maddison"], descending=True)
-    large.write_csv(REPORTS / "source_consistency.csv")
+    large.write_csv(OUTPUTS / "data_checks" / "source_consistency.csv")
 
     wdi_overlap = comparisons.filter(
         pl.col("growth_annual").is_not_null() & pl.col("wdi_growth_decimal").is_not_null()
@@ -119,12 +119,12 @@ def write_source_consistency(growth: pl.DataFrame) -> dict[str, float | int | No
 
 
 def write_hashes() -> dict[str, str]:
-    hashes = {str(path.relative_to(path.parents[2])): sha256_file(path) for path in OUTPUTS if path.exists()}
+    hashes = {str(path.relative_to(path.parents[2])): sha256_file(path) for path in OUTPUT_FILES if path.exists()}
     payload = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "hashes": hashes,
     }
-    (REPORTS / "output_hashes.json").write_text(
+    (OUTPUTS / "data_checks" / "output_hashes.json").write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
@@ -133,7 +133,7 @@ def write_hashes() -> dict[str, str]:
 
 def main() -> None:
     ensure_dirs()
-    missing = [str(path) for path in OUTPUTS if not path.exists()]
+    missing = [str(path) for path in OUTPUT_FILES if not path.exists()]
     if missing:
         raise FileNotFoundError("Missing processed outputs:\n" + "\n".join(missing))
 
@@ -159,8 +159,8 @@ Generated at: {datetime.now(timezone.utc).isoformat()}
 - `iso3 + year` unique in growth panel: pass
 - no final panel row before {START_YEAR}: pass
 - annual, five-year, and ten-year growth formulas rebuild from `log_gdp_pc`: pass
-- extreme annual growth rows written to `reports/extreme_growth_annual.csv`
-- source discrepancy rows written to `reports/source_consistency.csv`
+- extreme annual growth rows written to `outputs/data_checks/extreme_growth_annual.csv`
+- source discrepancy rows written to `outputs/data_checks/source_consistency.csv`
 
 ## Panel Sizes
 
@@ -183,7 +183,7 @@ Generated at: {datetime.now(timezone.utc).isoformat()}
 {json.dumps(hashes, indent=2)}
 ```
 """
-    (REPORTS / "validation_report.md").write_text(report, encoding="utf-8")
+    (OUTPUTS / "data_checks" / "validation_report.md").write_text(report, encoding="utf-8")
     print(report)
 
 

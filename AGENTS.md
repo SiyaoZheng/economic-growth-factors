@@ -1,4 +1,5 @@
 # 项目规程：各国经济增长影响因素研究
+> **⚠️ tool_disabled**: This agent runs on DeepSeek, which is NOT a multimodal model. The `view_image` tool will always fail. Do NOT use `view_image` under any circumstances. If you need to inspect an image, describe it to the user and ask them to describe what they see.
 
 本项目构建 1960 年起的跨国-年份面板数据，研究各国经济增长的关联因素。
 
@@ -178,3 +179,13 @@
   - `reports/coverage_report.html`
   - `reports/coverage_table.csv`
 - 每次修改 pipeline 后，必须确认以上 6 个文件全部存在且时间戳更新。
+
+### 7.8 R/ggplot2 图表输出规范
+
+- **双重格式**：每张图必须同时输出 PDF（矢量，`device = cairo_pdf`）和 PNG（`dpi = 300`），分别存到 `reports/did_diagnostics/` 和 `outputs/figures/`。
+- `run_did_diagnostics.R` 和 `run_did_placebo_only.R` 共用同名 PNG 输出路径，不要同时运行两个脚本。
+- **中文字体**：所有轴标签、图注、direct labeling 必须用中文，通过 `showtext` + `font_add("heiti", "/System/Library/Fonts/STHeiti Light.ttc")` 实现。
+- **AER 规范**：参照 `docs/AER_figure_guidelines.md`，去掉 title/subtitle，用 caption 传递信息；用 direct labeling 替代 legend；颜色用 ColorBrewer Dark2（`#1B9E77`、`#D95F02`、`#377EB8`、`#E41A1C`）；主题用 `theme_minimal` + 浅灰网格线。
+- **热力图**：`axis.text.y` 字体不小于 5.5pt，画布不小于 8.5×11 英寸；热力图独立 theme 必须带 `base_family = "sans"`，否则中文字体渲染缺失。
+- **R 脚本编辑**：`apply_patch` 不可用时，直接用 `python3 << 'PYEOF'` 读-改-写 R 脚本。
+

@@ -1,0 +1,273 @@
+%!TEX program = xelatex
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}\usepackage{xeCJK}
+\setCJKmainfont{Songti SC}[BoldFont=Heiti SC]
+\setCJKsansfont{Heiti SC}
+\setCJKmonofont{STFangsong}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{setspace}\onehalfspacing
+\usepackage{fancyhdr}\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\textsc{各国经济对AI依赖度的文本分析}}
+\fancyhead[R]{\small\thepage}\renewcommand{\headrulewidth}{0.3pt}
+\usepackage{booktabs,multirow,longtable,graphicx,caption,subcaption}
+\usepackage{tikz,pgfplots}\pgfplotsset{compat=1.18}
+\usepackage{hyperref,xcolor,enumitem,float,amsmath}
+\definecolor{aiaccent}{HTML}{2563EB}
+\hypersetup{colorlinks,linkcolor=aiaccent,urlcolor=aiaccent}
+
+\title{\textbf{各国经济对人工智能依赖度的文本分析}\\[4pt]\large 基于 Wikipedia 经济词条的词向量方法}
+\author{Siyao Zheng\thanks{计算社会科学；上海交通大学}}
+\date{\today}
+
+\begin{document}\maketitle
+
+\begin{abstract}
+\noindent 本文利用30国Wikipedia「Economy of X」词条的导言文本，通过Sentence-BERT词向量方法构建了「经济对AI依赖度」指标。以23个AI锚定短语的均值向量为AI概念向量，计算588条句子的余弦相似度，按国家聚合排名。中国（0.258）、南非（0.247）、印度（0.237）位居前三；沙特阿拉伯（0.105）垫底。Top-5组的高相似度句子占比达21.2\%，是Bottom-5组（1.2\%）的17倍。最终输出包含四维度分析、例句验证和可复现pipeline的全套教学演示材料。
+\end{abstract}
+
+\section{引言}
+
+「哪些国家的经济更依赖AI？」传统回答依赖专利数量或R\&D支出占比等结构化指标。本文尝试一种互补思路：从各国经济描述的\emph{语言特征}中推断AI相关度。如果一国经济文本中频繁出现与AI语义相近的表述，我们推断其经济叙事更深度地嵌入了AI和相关数字技术。
+
+具体地，从Wikipedia抓取30国「Economy of X」词条导言（introductory extract），用Sentence-BERT对所有句子进行语义编码，构建AI概念向量，计算余弦相似度，按国家聚合。全文所有步骤由Python pipeline自动化，数据、脚本、输出均可在项目目录中复现。
+
+\section{数据与预处理}
+
+\subsection{语料来源}
+Wikipedia API抓取30国英文词条导言，覆盖各大洲和不同收入水平。总计74,524字符、11,606词、平均387词/文档。语料很小但适合课堂演示。
+
+\subsection{预处理流程}
+\begin{enumerate}[nosep]
+\item NLTK \texttt{sent\_tokenize} 分句；
+\item NLTK \texttt{word\_tokenize} 分词并小写；
+\item 去除英文停用词及额外低信息词（also, however 等）；
+\item WordNetLemmatizer 词形还原；
+\item 过滤：去纯标点/纯数字token、长度$\le$2 token、token数$<$3的句子。
+\end{enumerate}
+最终得到588条有效句子，6,437个token，1,735个唯一词型。
+
+\section{方法}
+
+\subsection{AI锚定短语与概念向量}
+设计23个AI锚定短语，覆盖四个维度（表~\ref{tab:anchors}）。使用Sentence-BERT \texttt{all-MiniLM-L6-v2}（384维）编码所有锚定短语，取均值后归一化作为\emph{AI概念向量}$\mathbf{v}_{\text{AI}}$。
+
+\begin{table}[H]\centering\footnotesize
+\caption{AI锚定短语}\label{tab:anchors}
+\begin{tabular}{ll}
+\toprule\textbf{维度（7/5/4/7条）} & \textbf{锚定短语} \\
+\midrule
+\multirow{7}{*}{AI技术核心}
+& artificial intelligence and machine learning technologies \\
+& deep learning neural networks and AI research \\
+& robotics and intelligent automation systems \\
+& advanced algorithms and data-driven decision making \\
+& automated manufacturing and smart factories \\
+& AI-powered software and digital platforms \\
+& semiconductor chips and AI computing hardware \\
+\midrule
+\multirow{5}{*}{经济结构转型}
+& digital economy and technology-driven growth \\
+& innovation in high-tech industries \\
+& knowledge economy and research development \\
+& technology exports and intellectual property \\
+& digital transformation of traditional industries \\
+\midrule
+\multirow{4}{*}{劳动力与技能}
+& highly skilled technology workforce \\
+& STEM education and technical training \\
+& automation replacing routine jobs \\
+& digital skills and computer literacy \\
+\midrule
+\multirow{7}{*}{数字基础设施}
+& internet connectivity and digital infrastructure \\
+& cloud computing and data centers \\
+& broadband access and mobile technology \\
+& e-government and digital public services \\
+& fintech and digital financial services \\
+& startup ecosystem and venture capital in tech \\
+& investment in R\&D \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{余弦相似度与国家聚合}
+对588条句子逐一编码得到$\mathbf{s}_i$，计算余弦相似度$\text{Sim}_i=\frac{\mathbf{s}_i\cdot\mathbf{v}_{\text{AI}}}{\|\mathbf{s}_i\|\|\mathbf{v}_{\text{AI}}\|}$。按国家$c$取均值：$\text{AI-Dep}_c=\frac{1}{N_c}\sum_{i\in c}\text{Sim}_i$，同时报告中位数、最大值、标准差、P75、P90及高相似度句子占比（$\text{Sim}_i>0.3$）。
+
+\section{结果}
+
+\subsection{整体分布}
+588条句子相似度均值0.192，中位数0.188，标准差0.086，范围$[-0.031, 0.546]$。9.4\%的句子相似度$>0.3$，整体呈轻微右偏。
+
+\subsection{各维度AI概念向量相关性检验}
+为验证AI概念向量的内部一致性，计算四个维度锚定向量两两之间的余弦相似度：
+\begin{itemize}[nosep]
+\item AI核心--经济转型：0.649
+\item AI核心--劳动力：0.529
+\item AI核心--基础设施：0.630
+\item 经济转型--劳动力：0.524
+\item 经济转型--基础设施：0.633
+\item 劳动力--基础设施：0.538
+\end{itemize}
+各维度间相关系数均在0.52--0.65之间，中等偏强相关，说明四个维度共享一个更高阶的「技术-数字经济」语义空间，合成为一个AI概念向量是合理的。
+
+\subsection{国家排名}
+表~\ref{tab:rank30}报告全部30国排名。Top-5是中国、南非、印度、印度尼西亚、韩国；Bottom-5是沙特阿拉伯、智利、俄罗斯、德国、瑞士。
+
+\begin{table}[H]\centering\footnotesize
+\caption{30国AI依赖度完整排名}\label{tab:rank30}
+\begin{tabular}{rllrrc}
+\toprule\textbf{排名} & \textbf{国家} & & \textbf{Mean} & \textbf{Max} & \textbf{High\%} \\
+\midrule
+1 & China & 中国           & 0.258 & 0.546 & 25.0\% \\
+2 & South Africa & 南非         & 0.247 & 0.408 & 28.6\% \\
+3 & India & 印度              & 0.237 & 0.429 & 15.4\% \\
+4 & Indonesia & 印度尼西亚       & 0.231 & 0.375 & 23.1\% \\
+5 & South Korea & 韩国          & 0.229 & 0.454 & 18.2\% \\
+6 & United States & 美国        & 0.219 & 0.407 & 17.9\% \\
+7 & United Kingdom & 英国       & 0.218 & 0.433 & 7.7\% \\
+8 & Turkey & 土耳其            & 0.213 & 0.460 & 12.5\% \\
+9 & Japan & 日本               & 0.211 & 0.323 & 9.5\% \\
+10 & Singapore & 新加坡          & 0.211 & 0.266 & 0.0\% \\
+11 & Vietnam & 越南              & 0.210 & 0.311 & 7.7\% \\
+12 & Egypt & 埃及                & 0.203 & 0.280 & 0.0\% \\
+13 & Ethiopia & 埃塞俄比亚        & 0.198 & 0.369 & 12.5\% \\
+14 & Brazil & 巴西               & 0.194 & 0.457 & 4.5\% \\
+15 & France & 法国                & 0.191 & 0.333 & 4.5\% \\
+16 & Nigeria & 尼日利亚            & 0.189 & 0.326 & 8.3\% \\
+17 & Bangladesh & 孟加拉国          & 0.188 & 0.337 & 4.3\% \\
+18 & Thailand & 泰国               & 0.188 & 0.522 & 5.3\% \\
+19 & Italy & 意大利                & 0.187 & 0.355 & 13.3\% \\
+20 & Poland & 波兰                 & 0.174 & 0.351 & 5.9\% \\
+21 & Australia & 澳大利亚           & 0.169 & 0.293 & 0.0\% \\
+22 & Mexico & 墨西哥                & 0.167 & 0.371 & 12.5\% \\
+23 & Canada & 加拿大                & 0.165 & 0.331 & 8.8\% \\
+24 & Argentina & 阿根廷             & 0.154 & 0.237 & 0.0\% \\
+25 & Netherlands & 荷兰              & 0.153 & 0.413 & 7.7\% \\
+26 & Switzerland & 瑞士              & 0.152 & 0.227 & 0.0\% \\
+27 & Germany & 德国                  & 0.149 & 0.334 & 3.4\% \\
+28 & Russia & 俄罗斯                 & 0.147 & 0.279 & 0.0\% \\
+29 & Chile & 智利                    & 0.141 & 0.280 & 0.0\% \\
+30 & Saudi Arabia & 沙特阿拉伯        & 0.105 & 0.244 & 0.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{分组箱线图}
+我们将30国按排名分为三组：Top-5、Middle（Ethiopia--Thailand）、Bottom-5，各组的句子级相似度分布如表~\ref{tab:groups}所示。
+
+\begin{table}[H]\centering
+\caption{三组句级相似度分布对比}\label{tab:groups}
+\begin{tabular}{lrrrrrr}
+\toprule\textbf{组别} & \textbf{句数} & \textbf{均值} & \textbf{Q1} & \textbf{中位数} & \textbf{Q3} & \textbf{>0.3占比} \\
+\midrule
+Top-5      & 99  & 0.241 & 0.184 & 0.228 & 0.284 & 21.2\% \\
+Middle     & 122 & 0.192 & 0.123 & 0.192 & 0.241 & 6.6\% \\
+Bottom-5   & 81  & 0.142 & 0.091 & 0.137 & 0.193 & 1.2\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Top-5组均值（0.241）比Bottom-5组（0.142）高出0.099，约1.15个标准差。Top-5组有21.2\%的句子相似度超过0.3，而Bottom-5组仅有1.2\%，相差17倍。这表明AI相关语义在国家间确实有系统性的差异。
+
+\section{验证：具体例句分析}
+
+\subsection{Top-10最接近AI概念的句子}
+表~\ref{tab:top10}列出相似度最高的10条句子。几乎所有句子都直接涉及高科技制造、数字经济、研发投入、半导体、fintech等与AI锚点高度相关的内容。
+
+\begin{table}[H]\centering\footnotesize
+\caption{Top-10 AI相似度例句}\label{tab:top10}
+\begin{tabular}{rlp{10cm}}
+\toprule\textbf{\#} & \textbf{国家} & \textbf{句子（截断）} \\
+\midrule
+1 & China & Manufacturing has been transitioning toward high-tech industries such as electric vehicles, renewable energy, telecommunications\dots \\
+2 & Thailand & Telecommunications and trade in services are emerging as centers of industrial expansion and economic competitiveness. \\
+3 & Turkey & First established in 2000, many technoparks were pioneered by Turkish universities, now hosting over 1,600 R\&D centers\dots \\
+4 & Brazil & \dots Brazil managed to create a diversified industrial base, including the adoption of artificial intelligence\dots \\
+5 & South Korea & \dots economic growth is increasingly concentrated in a small number of tech-related companies\dots \\
+6 & UK & The UK's technology sector has an enterprise value of US\$1.2 trillion, with fintech, health technology, and semiconductors\dots \\
+7 & India & India's digital economy was estimated to be 11.7\% of GDP, with its total value expected to surpass US\$1 trillion by 2029. \\
+8 & Netherlands & Many of the world's largest tech companies are based in Amsterdam\dots such as IBM, Microsoft, Google, Oracle, Cisco, Uber, Netflix. \\
+9 & India & The government plays a major role in sectors like supercomputing, space and shipping\dots \\
+10 & South Africa & The city is home to hundreds of tech firms, and is referred to as the ``Startup Capital of Africa.'' \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Bottom-5最远离AI概念的句子}
+作为对照，表~\ref{tab:bottom5}列出相似度最低的5条句子。它们讨论的是石油卡特尔、财政赤字、税收、货币等传统经济议题，与AI锚点的语义几无重叠。
+
+\begin{table}[H]\centering\footnotesize
+\caption{Bottom-5 AI相似度例句}\label{tab:bottom5}
+\begin{tabular}{rlp{11cm}}
+\toprule\textbf{\#} & \textbf{国家} & \textbf{句子} \\
+\midrule
+1 & Saudi Arabia & Saudi Arabia is a founding member of the OPEC cartel. \\
+2 & Mexico & Mexico was not significantly affected by the 2002 South American crisis\dots \\
+3 & Netherlands & The stern financial was abandoned in 2009, because of the then-current credit crises. \\
+4 & Bangladesh & Tax collection remains very low, with tax revenues accounting for only 7.7\% of GDP. \\
+5 & Netherlands & In 2016, the state budget showed a surplus of 0.4\%. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{按四维度的最高得分例句}
+为进一步验证AI概念向量的四个子维度是否有意义，表~\ref{tab:dim}展示了各维度得分最高的3条句子。
+
+\begin{table}[H]\centering\footnotesize
+\caption{各维度Top-3例句}\label{tab:dim}
+\begin{tabular}{lp{3.5cm}p{8.5cm}}
+\toprule\textbf{维度} & \textbf{国家} & \textbf{例句（截断）} \\
+\midrule
+\multirow{3}{*}{AI核心}
+& Brazil   & \dots Brazil created a diversified industrial base, including the adoption of artificial intelligence\dots \\
+& South Korea & South Korea's economy relies significantly on semiconductor and other AI-related gear exports (40\% of exports). \\
+& China    & Manufacturing has been transitioning toward high-tech industries such as electric vehicles, renewable energy\dots \\
+\midrule
+\multirow{3}{*}{经济转型}
+& China    & Manufacturing has been transitioning toward high-tech industries\dots \\
+& Thailand & Telecommunications and trade in services are emerging as centers of industrial expansion\dots \\
+& South Korea & \dots economic growth increasingly concentrated in tech-related companies\dots \\
+\midrule
+\multirow{3}{*}{劳动力}
+& China    & Manufacturing has been transitioning toward high-tech industries\dots \\
+& Ethiopia & \dots job creation has not caught up with the increased number of secondary and postsecondary graduates. \\
+& Thailand & Telecommunications and trade in services are emerging\dots \\
+\midrule
+\multirow{3}{*}{基础设施}
+& Thailand & Telecommunications and trade in services are emerging as centers of industrial expansion\dots \\
+& India    & The government plays a major role in sectors like supercomputing, space and shipping\dots \\
+& Turkey   & \dots technoparks pioneered by Turkish universities, hosting over 1,600 R\&D centers\dots \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+这些例句定性分析表明，AI概念向量确实捕捉了与AI、数字经济和科技转型相关的语义信号，而非无关的噪声。
+
+\section{讨论}
+
+\subsection{关键发现}
+\textbf{中国的第一名是合理的。}中国最高分句子出自高科技制造转型叙事，且R\&D投资句也进入Top-15。这在语义上与锚点中的「automated manufacturing」、「digital transformation」、「R\&D investment」直接对应。
+
+\textbf{新兴经济体在AI文本信号上可能强于部分发达国家。}Top-5中南非、印度、印度尼西亚均为发展中国家。这可能不是因为它们实际上技术更强，而是经济描述中更强调\emph{转型叙事}——从传统到数字化的语义跃迁比成熟发达经济体的「常态」描述更具显著性。
+
+\textbf{发达国家排名分化。}美国（\#6）、英国（\#7）排名靠前但并非前5；德国（\#27）、瑞士（\#26）居后。德国经济描述偏重制造业传统优势（汽车、化工），瑞士偏重金融和制药，AI/数字相关词汇的出现频率确实较低。
+
+\subsection{方法评估与局限}
+\begin{enumerate}[nosep]
+\item \textbf{四维度锚点设计合理}：维度间相关系数0.52--0.65，既不过高（说明有区分度）也不过低（说明共享高阶语义），合成为单一AI概念向量是合理的。
+\item \textbf{Top/Bottom例句提供了定性验证（face validity）}：高分句子涉及AI、半导体、数字经济、tech firms；低分句子涉及OPEC、预算赤字、税收。语义区分清晰。
+\item \textbf{语料规模小}（30文档、588句），不宜过度推断。扩展至更多国家或全词条正文可提高区分度。
+\item \textbf{仅分析英文Wikipedia}，非英语国家可能有不同的信息含量。
+\item \textbf{均值聚合平权化}。首句通常更具总体性，未来可加权（如tf-idf或位置权重）。
+\end{enumerate}
+
+\section{结论}
+
+本文用463行Python代码（3个脚本），从Wikipedia英文经济词条中提取了「AI依赖度」的跨国文本指标。工作流覆盖数据抓取、预处理、词向量编码、相似度计算、国家聚合、定量报告和LaTeX排版的全链条，适合作为text-as-data课堂演示。
+
+主要发现：中国（0.258）、南非（0.247）、印度（0.237）排名最高；沙特阿拉伯（0.105）垫底。Top-5组的高相似度句子占比是Bottom-5组的17倍。四维度分析与例句验证均显示指标具有良好的表面效度。
+
+\vspace{0.5cm}
+\noindent\textbf{数据可用性声明}：原始Wikipedia语料存放在 \texttt{data/raw/text\_corpus/}，预处理输出在 \texttt{data/processed/text\_corpus/}，三个Python脚本在 \texttt{scripts/} 目录下（\texttt{preprocess\_text\_corpus.py}、\texttt{ai\_dependency\_keyword.py}、\texttt{ai\_dependency\_embedding.py}），均可复现。本报告对应PDF由 \texttt{xelatex} 三次编译生成。
+
+\end{document}

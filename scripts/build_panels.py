@@ -13,7 +13,7 @@ from config import (
     DATA_PROCESSED,
     DATA_RAW,
     DATAVERSE_FILES,
-    REPORTS,
+    OUTPUTS,
     START_YEAR,
     WDI_INDICATORS,
     ensure_dirs,
@@ -268,7 +268,7 @@ def coverage_rows(df: pl.DataFrame, variables: list[str], stage: str) -> list[di
 
 
 def write_coverage_report(coverage: pl.DataFrame) -> None:
-    coverage.write_csv(REPORTS / "coverage_table.csv")
+    coverage.write_csv(OUTPUTS / "data_checks" / "coverage_table.csv")
     rows = coverage.to_dicts()
     table_rows = "\n".join(
         "<tr>"
@@ -301,7 +301,7 @@ def write_coverage_report(coverage: pl.DataFrame) -> None:
 </body>
 </html>
 """
-    (REPORTS / "coverage_report.html").write_text(document, encoding="utf-8")
+    (OUTPUTS / "data_checks" / "coverage_report.html").write_text(document, encoding="utf-8")
 
 
 def build_panels() -> None:

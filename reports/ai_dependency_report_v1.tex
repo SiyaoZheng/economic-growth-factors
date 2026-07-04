@@ -1,0 +1,338 @@
+%!TEX program = xelatex
+\documentclass[11pt,a4paper]{article}
+
+% ---------- 中文支持（xelatex 原生） ----------
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setCJKmainfont{Songti SC}[BoldFont=Heiti SC]
+\setCJKsansfont{Heiti SC}
+\setCJKmonofont{STFangsong}
+
+% ---------- 页面 ----------
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+
+% ---------- 图表 ----------
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% ---------- 其他 ----------
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{float}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue,
+}
+
+\title{\textbf{各国经济对人工智能依赖度的文本分析}\\
+\large 基于 Wikipedia 经济词条的词向量方法}
+\author{Siyao Zheng\thanks{计算社会科学；上海交通大学}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent 本文利用 30 个国家 Wikipedia \guillemotleft Economy of X\guillemotright 词条的导言文本，
+通过词向量（sentence embeddings）方法构建了\guillemotleft 经济对人工智能依赖度\guillemotright 指标。
+我们使用 Sentence-BERT（all-MiniLM-L6-v2）将所有句子编码为 384 维向量，并构建了涵盖
+AI 技术核心、数字经济转型、高技能劳动力和数字基础设施四个维度的 23 个锚定短语。
+以锚定向量的均值作为 AI 概念向量，计算各句的余弦相似度，再按国家聚合得到均值排名。
+结果显示，中国、南非、印度、韩国、印度尼西亚在 AI 依赖度指标上得分最高；
+沙特阿拉伯、智利、俄罗斯、德国、瑞士得分最低。该方法为课堂演示 text-as-data
+分析提供了可复现的完整工作流。
+\end{abstract}
+
+\section{引言}
+
+\textbf{研究问题：}各国经济在多大程度上表现出对人工智能及相关数字技术的依赖？
+这一问题对于理解全球技术竞争格局尤为关键。传统回答依赖专利数量、
+R\&D 支出或 ICT 出口占比等结构化指标；本文尝试一种互补的文本方法：
+从各国经济描述的\emph{语言特征}中推断 AI 相关度。
+
+\section{数据}
+
+\subsection{语料}
+
+我们从 Wikipedia API 抓取了 30 个代表性国家的\guillemotleft Economy of X\guillemotright 词条导言
+（introductory extract），覆盖北美、欧洲、东亚、南亚、东南亚、中东、非洲、
+拉丁美洲等地区，以及不同收入水平。语料基本信息见表~\ref{tab:corpus}。
+
+\begin{table}[H]
+\centering
+\caption{语料基本信息}
+\label{tab:corpus}
+\begin{tabular}{lr}
+\toprule
+\textbf{指标} & \textbf{数值} \\
+\midrule
+国家数 & 30 \\
+原始文档总字符数 & 74,524 \\
+原始总词数（英文） & 11,606 \\
+平均词数/文档 & 387 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{预处理}
+
+预处理流程如下：
+\begin{enumerate}[nosep]
+    \item \textbf{分句}：NLTK \texttt{sent\_tokenize}（英语）；
+    \item \textbf{分词 + 小写}：NLTK \texttt{word\_tokenize} $\to$ \texttt{.lower()}；
+    \item \textbf{去停用词}：NLTK 英文停用词表 + 手动添加低信息词（also, however 等）；
+    \item \textbf{词形还原}：NLTK WordNetLemmatizer；
+    \item \textbf{过滤}：去除纯标点/纯数字 token、长度 $\le$ 2 的 token、token 数 $<$ 3 的句子。
+\end{enumerate}
+
+预处理后得到 \textbf{588} 条有效句子，总计 6,437 个 token，来自 1,735 个唯一词型。
+
+\section{方法}
+
+\subsection{AI 锚定短语与概念向量}
+
+我们设计了 \textbf{23 个 AI 锚定短语}（见表~\ref{tab:anchors}），覆盖 AI 技术核心、
+经济结构转型、劳动力与技能、数字基础设施四个维度。使用 Sentence-BERT 的
+\texttt{all-MiniLM-L6-v2} 模型（384 维）将所有锚定短语编码为向量，
+取均值并归一化，作为 \emph{AI 概念向量} $\mathbf{v}_{\text{AI}}$。
+
+\begin{table}[H]
+\centering
+\caption{AI 锚定短语及其维度}
+\label{tab:anchors}
+\small
+\begin{tabular}{ll}
+\toprule
+\textbf{维度} & \textbf{锚定短语} \\
+\midrule
+\multirow{6}{*}{AI 技术核心}
+    & artificial intelligence and machine learning technologies \\
+    & deep learning neural networks and AI research \\
+    & robotics and intelligent automation systems \\
+    & advanced algorithms and data-driven decision making \\
+    & automated manufacturing and smart factories \\
+    & AI-powered software and digital platforms \\
+    & semiconductor chips and AI computing hardware \\
+\midrule
+\multirow{5}{*}{经济结构转型}
+    & digital economy and technology-driven growth \\
+    & innovation in high-tech industries \\
+    & knowledge economy and research development \\
+    & technology exports and intellectual property \\
+    & digital transformation of traditional industries \\
+\midrule
+\multirow{4}{*}{劳动力与技能}
+    & highly skilled technology workforce \\
+    & STEM education and technical training \\
+    & automation replacing routine jobs \\
+    & digital skills and computer literacy \\
+\midrule
+\multirow{7}{*}{数字基础设施}
+    & internet connectivity and digital infrastructure \\
+    & cloud computing and data centers \\
+    & broadband access and mobile technology \\
+    & e-government and digital public services \\
+    & fintech and digital financial services \\
+    & startup ecosystem and venture capital in tech \\
+    & investment in research and development R\&D \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{句子编码与相似度计算}
+
+对 588 条句子逐一编码得到 $\mathbf{s}_i$，计算每条句子与 AI 概念向量的余弦相似度：
+
+\begin{equation}
+\text{Sim}_i = \frac{\mathbf{s}_i \cdot \mathbf{v}_{\text{AI}}}{\|\mathbf{s}_i\| \cdot \|\mathbf{v}_{\text{AI}}\|}
+\end{equation}
+
+\subsection{国家级别聚合}
+
+对每个国家 $c$ 的所有句子相似度取均值作为 AI 依赖度指标：
+
+\begin{equation}
+\text{AI-Dep}_c = \frac{1}{N_c} \sum_{i \in c} \text{Sim}_i
+\end{equation}
+
+同时报告中位数、最大值、标准差、P75、P90 以及高相似度句子占比（$\text{Sim}_i > 0.3$）。
+
+\section{结果}
+
+\subsection{整体分布}
+
+表~\ref{tab:dist} 报告了 588 条句子相似度的整体分布特征。
+
+\begin{table}[H]
+\centering
+\caption{句级 AI 相似度整体分布}
+\label{tab:dist}
+\begin{tabular}{lr}
+\toprule
+\textbf{指标} & \textbf{数值} \\
+\midrule
+句子总数 & 588 \\
+相似度均值 & 0.192 \\
+相似度中位数 & 0.188 \\
+相似度标准差 & 0.086 \\
+最小值 & $-0.031$ \\
+最大值 & 0.546 \\
+高相似度句子占比（$>$0.3）& 9.35\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{国家排名}
+
+表~\ref{tab:ranking} 报告了 30 国的 AI 依赖度排名（仅 Top-10 和 Bottom-5；
+完整排名见附录~\ref{sec:full}）。
+
+\begin{table}[H]
+\centering
+\caption{各国 AI 依赖度排名（摘要）}
+\label{tab:ranking}
+\begin{tabular}{rllrrrr}
+\toprule
+\textbf{排名} & \textbf{国家} & & \textbf{均值} & \textbf{中位数} & \textbf{最大值} & \textbf{标准差} \\
+\midrule
+1 & China & 中国 & 0.258 & 0.233 & 0.546 & 0.087 \\
+2 & South Africa & 南非 & 0.247 & 0.237 & 0.408 & 0.104 \\
+3 & India & 印度 & 0.237 & 0.233 & 0.429 & 0.077 \\
+4 & Indonesia & 印度尼西亚 & 0.231 & 0.232 & 0.375 & 0.074 \\
+5 & South Korea & 韩国 & 0.229 & 0.218 & 0.454 & 0.095 \\
+6 & United States & 美国 & 0.219 & 0.213 & 0.407 & 0.081 \\
+7 & United Kingdom & 英国 & 0.218 & 0.219 & 0.433 & 0.075 \\
+8 & Turkey & 土耳其 & 0.213 & 0.184 & 0.460 & 0.095 \\
+9 & Japan & 日本 & 0.211 & 0.215 & 0.323 & 0.053 \\
+10 & Singapore & 新加坡 & 0.211 & 0.215 & 0.266 & 0.043 \\
+\midrule
+\multicolumn{7}{c}{\dots} \\
+\midrule
+26 & Switzerland & 瑞士 & 0.152 & 0.131 & 0.227 & 0.053 \\
+27 & Germany & 德国 & 0.149 & 0.144 & 0.334 & 0.071 \\
+28 & Russia & 俄罗斯 & 0.147 & 0.150 & 0.279 & 0.069 \\
+29 & Chile & 智利 & 0.141 & 0.131 & 0.280 & 0.064 \\
+30 & Saudi Arabia & 沙特阿拉伯 & 0.105 & 0.094 & 0.244 & 0.071 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{讨论}
+
+\subsection{主要发现}
+
+\textbf{第一名——中国}（均值 0.258，最大 0.546）：得分最高的句子来自高科技制造业转型的描述：
+``Manufacturing has been transitioning toward high-tech industries such as electric vehicles,
+renewable energy, telecommunications\dots'' 这意味着中国经济描述的 AI 相关语义信号不仅广泛，
+而且强度高。
+
+\textbf{新兴经济体的突出表现}：Top-5 中的南非、印度、印度尼西亚均为发展中国家。
+这可能反映其经济描述中更强调\emph{转型叙事}——从传统到数字化的语义跃迁比成熟发达经济体更具文本显著性。
+
+\textbf{发达经济体的\guillemotleft 低调\guillemotright}：美国（第 6）、英国（第 7）、日本（第 9）
+排名靠前但并非最高，德国、瑞士居后。可能原因有二：(1) 发达经济体的经济描述涵盖更广泛议题，
+AI/数字话题被稀释；(2) 对于 AI/数字经济，发达经济体的文本\guillemotleft 理所当然\guillemotright
+而非\guillemotleft 转型目标\guillemotright，语义上不那么凸显。
+
+\subsection{方法局限}
+
+\begin{enumerate}[nosep]
+    \item \textbf{语料规模小}：仅 30 个文档，588 句。扩展至更多国家或全词条正文可提高信噪比。
+    \item \textbf{锚点短语的主观性}：23 个短语虽覆盖四个维度，但选择存在研究者自由度；
+    未来的稳健性检查可做词汇替代和敏感性检验。
+    \item \textbf{依赖 Wikipedia}：Wikipedia 的编辑规范和覆盖偏差可能影响跨国可比性。
+    \item \textbf{语言限制}：仅分析英文词条，非英语国家的 Wikipedia 本地语言版本可能蕴含不同信息。
+    \item \textbf{聚合方式简单}：均值聚合忽略了句间权重差异（如首句通常更加总体性），
+    未来可考虑 tf-idf 加权或基于文档结构的加权方案。
+\end{enumerate}
+
+\section{结论}
+
+本文使用一种低门槛、完全可复现的词向量流程，从 Wikipedia 英文经济词条中提取了
+\guillemotleft 经济对 AI 依赖度\guillemotright 的国别交叉截面指标。主要发现是：
+
+\begin{enumerate}[nosep]
+    \item 中国、南非、印度在 AI 依赖度上排名最高，其经济描述中最频繁触及 AI、
+    数字经济和科技转型议题；
+    \item 新兴经济体在 AI 文本信号上可能比部分发达经济体更强——这可能反映了
+    \emph{叙事层面}上的转型程度而非\emph{实际层面}上的技术能力；
+    \item 该方法可作为课堂 text-as-data 分析的教学演示，展示从原始文本到可解释指标
+    的完整 pipeline。
+\end{enumerate}
+
+\newpage
+\appendix
+\section{完整 30 国排名}
+\label{sec:full}
+
+\begin{longtable}{rllrrrr}
+\caption{30 国 AI 依赖度完整排名} \\
+\toprule
+\textbf{排名} & \textbf{国家} & & \textbf{均值} & \textbf{中位数} & \textbf{最大值} & \textbf{标准差} \\
+\midrule
+\endfirsthead
+\multicolumn{7}{c}{（续前表）} \\
+\toprule
+\textbf{排名} & \textbf{国家} & & \textbf{均值} & \textbf{中位数} & \textbf{最大值} & \textbf{标准差} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+1 & China & 中国 & 0.258 & 0.233 & 0.546 & 0.087 \\
+2 & South Africa & 南非 & 0.247 & 0.237 & 0.408 & 0.104 \\
+3 & India & 印度 & 0.237 & 0.233 & 0.429 & 0.077 \\
+4 & Indonesia & 印度尼西亚 & 0.231 & 0.232 & 0.375 & 0.074 \\
+5 & South Korea & 韩国 & 0.229 & 0.218 & 0.454 & 0.095 \\
+6 & United States & 美国 & 0.219 & 0.213 & 0.407 & 0.081 \\
+7 & United Kingdom & 英国 & 0.218 & 0.219 & 0.433 & 0.075 \\
+8 & Turkey & 土耳其 & 0.213 & 0.184 & 0.460 & 0.095 \\
+9 & Japan & 日本 & 0.211 & 0.215 & 0.323 & 0.053 \\
+10 & Singapore & 新加坡 & 0.211 & 0.215 & 0.266 & 0.043 \\
+11 & Vietnam & 越南 & 0.210 & 0.211 & 0.311 & 0.083 \\
+12 & Egypt & 埃及 & 0.203 & 0.201 & 0.280 & 0.053 \\
+13 & Ethiopia & 埃塞俄比亚 & 0.198 & 0.188 & 0.369 & 0.086 \\
+14 & Brazil & 巴西 & 0.194 & 0.204 & 0.457 & 0.086 \\
+15 & France & 法国 & 0.191 & 0.180 & 0.333 & 0.060 \\
+16 & Nigeria & 尼日利亚 & 0.189 & 0.185 & 0.326 & 0.079 \\
+17 & Bangladesh & 孟加拉国 & 0.188 & 0.196 & 0.337 & 0.077 \\
+18 & Thailand & 泰国 & 0.188 & 0.173 & 0.522 & 0.100 \\
+19 & Italy & 意大利 & 0.187 & 0.162 & 0.355 & 0.077 \\
+20 & Poland & 波兰 & 0.174 & 0.142 & 0.351 & 0.077 \\
+21 & Australia & 澳大利亚 & 0.169 & 0.169 & 0.293 & 0.059 \\
+22 & Mexico & 墨西哥 & 0.167 & 0.141 & 0.371 & 0.088 \\
+23 & Canada & 加拿大 & 0.165 & 0.150 & 0.331 & 0.082 \\
+24 & Argentina & 阿根廷 & 0.154 & 0.137 & 0.237 & 0.069 \\
+25 & Netherlands & 荷兰 & 0.153 & 0.148 & 0.413 & 0.107 \\
+26 & Switzerland & 瑞士 & 0.152 & 0.131 & 0.227 & 0.053 \\
+27 & Germany & 德国 & 0.149 & 0.144 & 0.334 & 0.071 \\
+28 & Russia & 俄罗斯 & 0.147 & 0.150 & 0.279 & 0.069 \\
+29 & Chile & 智利 & 0.141 & 0.131 & 0.280 & 0.064 \\
+30 & Saudi Arabia & 沙特阿拉伯 & 0.105 & 0.094 & 0.244 & 0.071 \\
+\end{longtable}
+
+\section{生成统计}
+
+\noindent
+\textbf{生成日期}：2026 年 7 月 4 日 \\
+\textbf{模型}：Sentence-BERT \texttt{all-MiniLM-L6-v2}（384 维） \\
+\textbf{数据处理脚本}：
+\texttt{preprocess\_text\_corpus.py}, \texttt{ai\_dependency\_keyword.py}, \texttt{ai\_dependency\_embedding.py} \\
+\textbf{原始数据}：\texttt{data/raw/text\_corpus/economy\_corpus.jsonl} \\
+\textbf{预处理输出}：\texttt{data/processed/text\_corpus/} \\
+\textbf{分析结果}：\texttt{reports/ai\_dependency\_embedding.csv}
+
+\vspace{1cm}
+\noindent\textit{本报告所有数据处理与分析均可通过 pipeline 复现，无需手动操作。}
+
+\end{document}
