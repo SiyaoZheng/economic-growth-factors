@@ -10,7 +10,7 @@ macOS `launchd` 每 15 分钟运行一次：
 python3 scripts/auto_git_snapshot.py
 ```
 
-脚本只在工作区存在真实 Git 改动时提交，并推送到当前分支的上游远端。当前仓库的上游是 `origin/main`。
+脚本只在工作区存在真实 Git 改动时提交。推送功能已关闭（local-only），不会上传任何数据到远端。
 
 提交信息格式：
 
@@ -46,7 +46,7 @@ tail -n 50 .git/autosnapshot/launchd.err.log
 python3 scripts/auto_git_snapshot.py
 ```
 
-只提交但不推送：
+只提交但不推送（默认 state）：
 
 ```bash
 AUTOGIT_PUSH=0 python3 scripts/auto_git_snapshot.py
