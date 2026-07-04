@@ -1,0 +1,200 @@
+<!-- preamble start -->
+<!DOCTYPE html> 
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tinytable_u7ithqcceqx2f18s32la</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body>
+<!-- preamble end -->
+
+    <script>
+
+      function styleCell_u7ithqcceqx2f18s32la(i, j, css_id) {
+          var table = document.getElementById("tinytable_u7ithqcceqx2f18s32la");
+          var cell = table.querySelector(`[data-row="${i}"][data-col="${j}"]`);
+          if (cell) {
+              console.log(`Styling cell at (${i}, ${j}) with class ${css_id}`);
+              cell.classList.add(css_id);
+          } else {
+              console.warn(`Cell at (${i}, ${j}) not found.`);
+          }
+      }
+      function spanCell_u7ithqcceqx2f18s32la(i, j, rowspan, colspan) {
+        var table = document.getElementById("tinytable_u7ithqcceqx2f18s32la");
+        const targetCell = table.querySelector(`[data-row="${i}"][data-col="${j}"]`);
+        if (!targetCell) {
+          console.warn(`Cell at (${i}, ${j}) not found.`);
+        }
+
+        // Get all cells that need to be removed
+        const cellsToRemove = [];
+        for (let r = 0; r < rowspan; r++) {
+          for (let c = 0; c < colspan; c++) {
+            if (r === 0 && c === 0) continue; // Skip the target cell
+            const cell = table.querySelector(`[data-row="${i + r}"][data-col="${j + c}"]`);
+            if (cell) {
+              cellsToRemove.push(cell);
+            }
+          }
+        }
+
+        // Remove all cells
+        cellsToRemove.forEach(cell => cell.remove());
+
+        // Set rowspan and colspan of the target cell if it exists
+        if (targetCell) {
+          targetCell.rowSpan = rowspan;
+          targetCell.colSpan = colspan;
+        }
+      }
+      // tinytable span after
+      window.addEventListener('load', function () {
+          var cellsToStyle = [
+            // tinytable style arrays after
+          { positions: [ { i: '12', j: 1 }, { i: '12', j: 2 }, { i: '12', j: 3 }, { i: '12', j: 4 },  ], css_id: 'tinytable_css_ozmjwzagdg03965angs5',}, 
+          { positions: [ { i: '10', j: 3 }, { i: '10', j: 4 }, { i: '10', j: 1 }, { i: '10', j: 2 },  ], css_id: 'tinytable_css_kto316u05qoecyt82prc',}, 
+          { positions: [ { i: '4', j: 1 }, { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '8', j: 1 }, { i: '5', j: 1 }, { i: '6', j: 1 }, { i: '7', j: 1 }, { i: '3', j: 2 }, { i: '9', j: 1 }, { i: '1', j: 2 }, { i: '11', j: 1 }, { i: '7', j: 2 }, { i: '4', j: 2 }, { i: '5', j: 2 }, { i: '2', j: 2 }, { i: '11', j: 2 }, { i: '8', j: 2 }, { i: '9', j: 2 }, { i: '6', j: 2 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '4', j: 3 }, { i: '1', j: 3 }, { i: '6', j: 3 }, { i: '7', j: 3 }, { i: '8', j: 3 }, { i: '5', j: 3 }, { i: '1', j: 4 }, { i: '11', j: 3 }, { i: '3', j: 4 }, { i: '9', j: 3 }, { i: '5', j: 4 }, { i: '2', j: 4 }, { i: '7', j: 4 }, { i: '4', j: 4 }, { i: '9', j: 4 }, { i: '6', j: 4 }, { i: '11', j: 4 }, { i: '8', j: 4 },  ], css_id: 'tinytable_css_d3v04e4nu59h3l8qtaeg',}, 
+          { positions: [ { i: '0', j: 1 }, { i: '0', j: 2 }, { i: '0', j: 3 }, { i: '0', j: 4 },  ], css_id: 'tinytable_css_fhdwz66foo195aaqbmnq',}, 
+          { positions: [ { i: '12', j: 0 },  ], css_id: 'tinytable_css_ngsahe5tolj13tyyh5yn',}, 
+          { positions: [ { i: '10', j: 0 },  ], css_id: 'tinytable_css_mx40qnst5nzjswtsojfw',}, 
+          { positions: [ { i: '1', j: 0 }, { i: '2', j: 0 }, { i: '3', j: 0 }, { i: '4', j: 0 }, { i: '5', j: 0 }, { i: '6', j: 0 }, { i: '7', j: 0 }, { i: '8', j: 0 }, { i: '9', j: 0 }, { i: '11', j: 0 },  ], css_id: 'tinytable_css_nq9m7x9eh5to3vgsrvs6',}, 
+          { positions: [ { i: '0', j: 0 },  ], css_id: 'tinytable_css_f87ewmmrjz8f66wgvm4w',}, 
+          ];
+
+          // Loop over the arrays to style the cells
+          cellsToStyle.forEach(function (group) {
+              group.positions.forEach(function (cell) {
+                  styleCell_u7ithqcceqx2f18s32la(cell.i, cell.j, group.css_id);
+              });
+          });
+      });
+    </script>
+
+    <style>
+      /* tinytable css entries after */
+      .table td.tinytable_css_ozmjwzagdg03965angs5, .table th.tinytable_css_ozmjwzagdg03965angs5 { text-align: center; border-bottom: solid #d3d8dc 0.1em; }
+      .table td.tinytable_css_kto316u05qoecyt82prc, .table th.tinytable_css_kto316u05qoecyt82prc { text-align: center; border-bottom: solid black 0.05em; }
+      .table td.tinytable_css_d3v04e4nu59h3l8qtaeg, .table th.tinytable_css_d3v04e4nu59h3l8qtaeg { text-align: center; }
+      .table td.tinytable_css_fhdwz66foo195aaqbmnq, .table th.tinytable_css_fhdwz66foo195aaqbmnq { text-align: center; border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
+      .table td.tinytable_css_ngsahe5tolj13tyyh5yn, .table th.tinytable_css_ngsahe5tolj13tyyh5yn { text-align: left; border-bottom: solid #d3d8dc 0.1em; }
+      .table td.tinytable_css_mx40qnst5nzjswtsojfw, .table th.tinytable_css_mx40qnst5nzjswtsojfw { text-align: left; border-bottom: solid black 0.05em; }
+      .table td.tinytable_css_nq9m7x9eh5to3vgsrvs6, .table th.tinytable_css_nq9m7x9eh5to3vgsrvs6 { text-align: left; }
+      .table td.tinytable_css_f87ewmmrjz8f66wgvm4w, .table th.tinytable_css_f87ewmmrjz8f66wgvm4w { text-align: left; border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
+    </style>
+    <div class="container">
+      <table class="table table-borderless" id="tinytable_u7ithqcceqx2f18s32la" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing='true'>
+        <thead>
+        <caption>Table 1. Growth Determinants: Country-Year Panel (PWT 1961–2023)</caption>
+              <tr>
+                <th scope="col" data-row="0" data-col="0"> </th>
+                <th scope="col" data-row="0" data-col="1">(1)</th>
+                <th scope="col" data-row="0" data-col="2">(2)</th>
+                <th scope="col" data-row="0" data-col="3">(3)</th>
+                <th scope="col" data-row="0" data-col="4">(4)</th>
+              </tr>
+        </thead>
+        <tfoot><tr><td colspan='5'>+ p < 0.1, * p < 0.05, ** p < 0.01, *** p < 0.001</td></tr>
+<tr><td colspan='5'>All models include country and year fixed effects.</td></tr>
+<tr><td colspan='5'>Standard errors clustered at country level in parentheses.</td></tr>
+<tr><td colspan='5'>Dependent variable: annual log GDP per capita growth (×100 = percentage points).</td></tr>
+<tr><td colspan='5'>Column (2): excluding China (63 obs dropped). Column (3): excluding 35 high-income OECD countries (1,973 obs dropped).</td></tr>
+<tr><td colspan='5'>Column (4): excluding |growth| > 30% observations (18 obs dropped).</td></tr>
+<tr><td colspan='5'>Baseline estimation sample: 6548 obs, 120 countries, years 1961–2023, mean DV = 2.04.</td></tr>
+<tr><td colspan='5'>Growth computed from PWT 11.0 real GDP per capita (rgdpna / population), log-differenced annually.</td></tr></tfoot>
+        <tbody>
+                <tr>
+                  <td data-row="1" data-col="0">Human Capital Index (lagged)</td>
+                  <td data-row="1" data-col="1">-2.244**</td>
+                  <td data-row="1" data-col="2">-2.401***</td>
+                  <td data-row="1" data-col="3">-2.659**</td>
+                  <td data-row="1" data-col="4">-2.227**</td>
+                </tr>
+                <tr>
+                  <td data-row="2" data-col="0"></td>
+                  <td data-row="2" data-col="1">(0.670)</td>
+                  <td data-row="2" data-col="2">(0.650)</td>
+                  <td data-row="2" data-col="3">(0.800)</td>
+                  <td data-row="2" data-col="4">(0.661)</td>
+                </tr>
+                <tr>
+                  <td data-row="3" data-col="0">Investment Share (lagged)</td>
+                  <td data-row="3" data-col="1">2.789</td>
+                  <td data-row="3" data-col="2">2.633</td>
+                  <td data-row="3" data-col="3">1.155</td>
+                  <td data-row="3" data-col="4">2.941+</td>
+                </tr>
+                <tr>
+                  <td data-row="4" data-col="0"></td>
+                  <td data-row="4" data-col="1">(1.914)</td>
+                  <td data-row="4" data-col="2">(1.929)</td>
+                  <td data-row="4" data-col="3">(2.054)</td>
+                  <td data-row="4" data-col="4">(1.698)</td>
+                </tr>
+                <tr>
+                  <td data-row="5" data-col="0">TFP (lagged)</td>
+                  <td data-row="5" data-col="1">-0.950+</td>
+                  <td data-row="5" data-col="2">-0.995+</td>
+                  <td data-row="5" data-col="3">-0.722</td>
+                  <td data-row="5" data-col="4">-0.767+</td>
+                </tr>
+                <tr>
+                  <td data-row="6" data-col="0"></td>
+                  <td data-row="6" data-col="1">(0.527)</td>
+                  <td data-row="6" data-col="2">(0.532)</td>
+                  <td data-row="6" data-col="3">(0.519)</td>
+                  <td data-row="6" data-col="4">(0.423)</td>
+                </tr>
+                <tr>
+                  <td data-row="7" data-col="0">Export Share (lagged)</td>
+                  <td data-row="7" data-col="1">-1.220</td>
+                  <td data-row="7" data-col="2">-1.197</td>
+                  <td data-row="7" data-col="3">-3.492+</td>
+                  <td data-row="7" data-col="4">-0.249</td>
+                </tr>
+                <tr>
+                  <td data-row="8" data-col="0"></td>
+                  <td data-row="8" data-col="1">(1.443)</td>
+                  <td data-row="8" data-col="2">(1.457)</td>
+                  <td data-row="8" data-col="3">(1.888)</td>
+                  <td data-row="8" data-col="4">(1.144)</td>
+                </tr>
+                <tr>
+                  <td data-row="9" data-col="0">Import Share (lagged)</td>
+                  <td data-row="9" data-col="1">0.069</td>
+                  <td data-row="9" data-col="2">0.054</td>
+                  <td data-row="9" data-col="3">-2.989+</td>
+                  <td data-row="9" data-col="4">1.209</td>
+                </tr>
+                <tr>
+                  <td data-row="10" data-col="0"></td>
+                  <td data-row="10" data-col="1">(1.260)</td>
+                  <td data-row="10" data-col="2">(1.281)</td>
+                  <td data-row="10" data-col="3">(1.617)</td>
+                  <td data-row="10" data-col="4">(0.976)</td>
+                </tr>
+                <tr>
+                  <td data-row="11" data-col="0">Observations</td>
+                  <td data-row="11" data-col="1">6548</td>
+                  <td data-row="11" data-col="2">6485</td>
+                  <td data-row="11" data-col="3">4575</td>
+                  <td data-row="11" data-col="4">6530</td>
+                </tr>
+                <tr>
+                  <td data-row="12" data-col="0">Within R²</td>
+                  <td data-row="12" data-col="1">0.011</td>
+                  <td data-row="12" data-col="2">0.012</td>
+                  <td data-row="12" data-col="3">0.012</td>
+                  <td data-row="12" data-col="4">0.012</td>
+                </tr>
+        </tbody>
+      </table>
+    </div>
+<!-- postamble start -->
+  </body>
+
+</html>
+<!-- postamble end -->
+<!-- hack to avoid NA insertion in last line -->

@@ -155,7 +155,7 @@ def fetch_wdi_indicator(
 
     print(f"Downloading WDI indicator: {indicator} -> {variable}", flush=True)
     url = f"https://api.worldbank.org/v2/country/all/indicator/{indicator}"
-    per_page = 1000
+    per_page = 500
     page = 1
     metadata: dict[str, Any] | None = None
     rows: list[dict[str, Any]] = []
