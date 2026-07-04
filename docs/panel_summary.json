@@ -28,6 +28,6 @@
   "lag": "controls lagged 1 year",
   "se": "clustered at country level",
   "fixed_effects": "country + year",
-  "winsor": "growth_annual at p1-p99",
+  "winsor": "growth_annual 在 p1 和 p99 缩尾 (210 observations)",
   "trade_note": "pwt_import_share = csh_m from PWT (negative by convention = -imports/GDP). Use pwt_import_share_abs or pwt_trade_openness."
 }

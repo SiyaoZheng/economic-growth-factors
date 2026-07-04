@@ -1,0 +1,375 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexart}
+
+% --- Packages ---
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.8cm, right=2.8cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{natbib}
+\usepackage{colortbl}
+
+% --- Let ctex auto-detect system fonts (no manual setCJKmainfont) ---
+\setmainfont{Times New Roman}
+
+% --- Page style ---
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray!60}R\&R Response Package --- 演示}
+\fancyhead[R]{\small\color{gray!60}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% --- Title formatting ---
+\titleformat{\section}{\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{1em}{}
+
+% --- Custom envs ---
+\newenvironment{responseblock}[1]
+  {\subsection{#1}\vspace{4pt}}
+  {\vspace{10pt}\hrule\vspace{8pt}}
+
+\newcommand{\reviewercomment}[1]{%
+  \par\noindent\fcolorbox{gray!30}{gray!5}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{%
+      \textbf{审稿意见原文：} \textit{#1}%
+    }%
+  }\par\vspace{6pt}%
+}
+
+\newcommand{\responseaction}[2]{%
+  \textbf{修改行动：} #1
+
+  \textbf{修改位置：} #2
+}
+
+\newcommand{\authorfill}[1]{%
+  \textcolor{red}{\textbf{[作者待填入：} #1\textbf{]}}%
+}
+
+% --- Color definitions ---
+\definecolor{sev-high}{HTML}{c62828}
+\definecolor{sev-medium}{HTML}{e65100}
+\definecolor{sev-low}{HTML}{888888}
+\definecolor{status-accept}{HTML}{2e7d32}
+\definecolor{status-needs-author}{HTML}{e65100}
+\definecolor{status-clarify}{HTML}{1565c0}
+
+\newcommand{\cellsevhigh}{\cellcolor{red!10}\textcolor{red!70!black}}
+\newcommand{\cellsevmed}{\cellcolor{orange!10}\textcolor{orange!70!black}}
+\newcommand{\cellsevlow}{\cellcolor{gray!10}\textcolor{gray}}
+\newcommand{\cellacc}{\cellcolor{green!10}\textcolor{green!60!black}}
+\newcommand{\cellna}{\cellcolor{orange!15}\textcolor{orange!80!black}}
+\newcommand{\cellcl}{\cellcolor{blue!10}\textcolor{blue!70!black}}
+
+\begin{document}
+
+% ================================================================
+% COVER PAGE
+% ================================================================
+\thispagestyle{empty}
+\begin{center}
+  \vspace*{6cm}
+
+  {\Huge\bfseries 返修回应文件}
+
+  \vspace{0.8cm}
+
+  {\Large R\&R Response Package}
+
+  \vspace{0.5cm}
+
+  {\large AI算力扩张与经济增长：跨国面板证据}
+
+  \vspace{2cm}
+
+  {\normalsize
+    \begin{tabular}{rl}
+      投稿期刊 & 《管理世界》（模拟）\\
+      审稿人 & 2 位，共 13 项原子请求\\
+      回应日期 & \today \\
+      包版本 & 演示用、非正式提交件\\
+    \end{tabular}
+  }
+
+  \vspace{1.5cm}
+
+  \fcolorbox{gray!40}{yellow!5}{%
+    \parbox{0.75\linewidth}{\centering\small
+      \textbf{⚠ 注意}：本文件是 reviewer-response skill 的模拟演示输出。\\
+      所有审稿意见均为虚构，不包含真实期刊审稿报告或投稿手稿。
+    }%
+  }
+
+\end{center}
+\newpage
+
+% ================================================================
+% TABLE OF CONTENTS
+% ================================================================
+\thispagestyle{empty}
+\tableofcontents
+\newpage
+
+% ================================================================
+% EDITOR LETTER
+% ================================================================
+\section{致编辑信}
+\label{sec:editor}
+
+尊敬的编辑老师：
+
+感谢您和两位审稿人为本文提供的细致评审意见。以下是我们对每条意见的逐条回应。所有修订在修改稿中以蓝色高亮标注，并在附表中提供了返修矩阵索引（\S\ref{sec:matrix}）以便追溯。
+
+\bigskip
+
+敬礼
+
+作者
+
+\newpage
+
+% ================================================================
+% RESPONSES TO REVIEWER 1
+% ================================================================
+\section{对审稿人 1 的回应}
+
+\begin{responseblock}{R1.1 · 二元 DID 识别基础薄弱}
+\reviewercomment{44 个处理组国家中 35 个在 2015 年已始终处理，仅 9 个晚期加入者提供识别变异。建议将连续处理变量设为主设定，二元 DID 降级为附录诊断。}
+
+\textbf{审稿人意见：} 44 个处理组国家中 35 个在 2015 年已始终处理，仅 9 个晚期加入者提供识别变异，二元 DID 识别基础过薄。
+
+\textbf{作者回应：} 我们完全同意审稿人的判断。二元 DID 设定在本研究中的识别变异主要来自 9 个晚期加入者，不足以支撑因果推断。在修改稿中，我们：
+\begin{enumerate}
+  \item 将连续处理变量 $\log(\text{rmax})$ 作为主设定（正文 §3.1）；
+  \item 将二元 DID 及其事件研究图移至附录 A，并明确标注为\emph{诊断性/探索性}，不声称因果；
+  \item 在事件研究图注释中说明基于 9 个单元的 pre-trend 不应被视为平行趋势的统计证据，仅用于描述性诊断。
+\end{enumerate}
+
+\textbf{修改位置：} 正文 §3.1，附录 A（图 A2 及说明）。\\[4pt]
+\textbf{需要注意的边界：} 连续处理变量设定不依赖平行趋势假设，但需要条件独立性；当前控制变量已在 §3.2 中讨论。
+\end{responseblock}
+
+\begin{responseblock}{R1.2 · 坏控制变量 pwt\_tfp\_lag1}
+\reviewercomment{表 1 包含 pwt\_tfp\_lag1。TFP 是 GDP 的索洛剩余，如果算力影响 GDP，TFP 是后处理变量，即使滞后也是坏控制。}
+
+\textbf{审稿人意见：} pwt\_tfp\_lag1 是坏控制。TFP 是 GDP 的索洛剩余，如果算力影响 GDP，TFP 即使滞后也是后处理变量，会偏误核心系数（Angrist \& Pischke, 2009）。
+
+\textbf{作者回应：} 这一批评成立。修改稿中：
+\begin{enumerate}
+  \item 主设定已移除 $\text{pwt\_tfp\_lag1}$；
+  \item 表 1 增设一列包含 TFP 的设定以展示系数稳定性——无论是否控制 TFP，核心系数方向与显著性均一致 \authorfill{填入实际结果}。
+\end{enumerate}
+
+\textbf{修改位置：} 表 1 列 (2)--(3) 及对应脚注。
+\end{responseblock}
+
+\begin{responseblock}{R1.3 · 聚类标准误（44 clusters）}
+\reviewercomment{44 个聚类低于 50 的常规阈值，cluster-robust 标准误可能向下偏误（Cameron \& Miller, 2015）。建议使用 wild cluster bootstrap。}
+
+\textbf{审稿人意见：} 仅有 44 个聚类，低于 50 个聚类的常规阈值，cluster-robust 标准误可能向下偏误（Cameron \& Miller, 2015）。
+
+\textbf{作者回应：} 我们使用 wild cluster bootstrap（fwildclusterboot 包，MacKinnon \& Webb, 2017）对主系数重新推断，结果如下：\authorfill{填入 bootstrap p 值及与 cluster-robust p 值的比较}。bootstrap p 值与 cluster-robust p 值一致/有差异 \authorfill{填入结论}。我们在表 1 注释中同时报告了两种 p 值，并在 §3.3 讨论了有限聚类的局限性。
+
+\textbf{修改位置：} 表 1 注释，正文 §3.3。
+\end{responseblock}
+
+\begin{responseblock}{R1.4 · pwt\_import\_share 变量符号}
+\reviewercomment{PWT 的 csh\_m 取负值，系数符号难以解读。请使用绝对值版本。}
+
+\textbf{审稿人意见：} pwt\_import\_share 系数难以解读——PWT 的 $\text{csh\_m}$ 定义为 $-(\text{imports}/\text{GDP})$，负值表示更高进口。
+
+\textbf{作者回应：} 已在回归中使用已构建的绝对值版本 $\text{pwt\_import\_share\_lag1\_abs}$，并在表 1 注释中说明：``根据 PWT 的编码惯例，$\text{csh\_m} = -(\text{imports}/\text{GDP})$；本文取绝对值使变量直观为进口占比。''
+
+\textbf{修改位置：} 表 1 注释。
+\end{responseblock}
+
+\begin{responseblock}{R1.5 · 样本损耗未报告}
+\reviewercomment{从 1665 个观测到 1080 个完整案例损耗 35\%，未报告缺失诊断。}
+
+\textbf{审稿人意见：} 从 1665 个观测到 1080 个完整案例损耗 35\%，未报告缺失诊断。
+
+\textbf{作者回应：} 我们在分析脚本中增加了缺失诊断步骤。各变量导致的缺失数量及保留/剔除样本在关键变量上的均值比较见附录表 C1。简要汇总：\authorfill{保留/剔除是否系统性差异}。
+
+\textbf{修改位置：} 附录 C 表 C1，正文 §3.1。
+\end{responseblock}
+
+\begin{responseblock}{R1.6 · 文献更新}
+\reviewercomment{缺少近期文献：Autor \& Salomons (2024), Brynjolfsson et al. (2025)。}
+
+\textbf{审稿人意见：} 缺少近期重要实证文献，尤其是 Autor \& Salomons (2024) 关于新工作来源的跨国研究和 Brynjolfsson, Rock \& Syverson (2025) 关于 AI 生产力悖论的最新证据。
+
+\textbf{作者回应：} 我们已检索上述文献并在修改稿中更新了文献综述：
+\begin{itemize}
+  \item \citet{autor_salomons_2024} 利用 8 个国家的专利和职位公告数据追踪了新任务创造的过程。本文第四章的机制分析部分已与该文发现进行对话 \authorfill{填入具体对话点}。
+  \item \citet{brynjolfsson_rock_syverson_2025} 提出``生产力 J 曲线''——通用目的技术早期因无形资本投入被低估而显示为低生产率。这一观点与本文的结论一致/不一致 \authorfill{填入判断}。
+\end{itemize}
+
+\textbf{修改位置：} 正文 §1--2 文献综述段落，§5 讨论部分。
+\end{responseblock}
+
+\begin{responseblock}{R1.7 · Maddison 替代增长度量}
+\reviewercomment{仅使用 PWT 增长率。建议报告 Maddison 增长率作为稳健性检验。}
+
+\textbf{审稿人意见：} 仅使用 PWT 增长率，建议报告 Maddison 增长率作为稳健性。
+
+\textbf{作者回应：} 我们已在附录表 A3 中以 $\text{maddison\_growth\_annual}$ 为因变量重新估计了主模型。对 $\text{source\_consistency.csv}$ 中差异大于 0.10 log points 的观测进行了审查：\authorfill{填入审查结论}。Maddison 增长率的结果与 PWT 基准一致/有差异 \authorfill{填入判断}。
+
+\textbf{修改位置：} 附录表 A3。
+\end{responseblock}
+
+\newpage
+
+% ================================================================
+% RESPONSES TO REVIEWER 2
+% ================================================================
+\section{对审稿人 2 的回应}
+
+\begin{responseblock}{R2.1 · 新任务渠道代理 ⚠ 待作者决策}
+\reviewercomment{pwt\_human\_capital\_index 作为``新任务创造能力''代理过于间接，缺乏区分效度。建议寻找更直接代理或将``渠道分解''降级为``异质性分析''。}
+
+\textcolor{red}{\textbf{⚠ 以下回复尚未最终确定，等待作者决策。}}
+
+\bigskip
+
+\textbf{审稿人意见：} $\text{pwt\_human\_capital\_index}$ 作为新任务创造能力的代理过于间接，缺乏区分效度。
+
+\textbf{作者回应：} 我们承认人力资本指数不是新任务创造的特异性代理——它与所有增长变量相关，不能作为渠道证据独立支撑结论。我们有两个处理方案：
+\begin{enumerate}
+  \item[A.] 寻找更直接的代理（如 ICT 服务出口占比、高技能专利占比），更新数据 pipeline 并重新估计；
+  \item[B.] 将 §4 的``渠道分解''降级为``异质性分析''，移除因果机制用语。
+\end{enumerate}
+修改后的位置将在 §4 中更新。
+\end{responseblock}
+
+\begin{responseblock}{R2.2 · 测量范围声明}
+\reviewercomment{141/185 个国家在 TOP500 中算力为零。这是测量零还是真实零？许多发展中国家通过云服务使用 AI 却没有自有超算。}
+
+\textbf{审稿人意见：} 141/185 个国家 TOP500 算力为零——这是测量零还是真实零？许多发展中国家通过云服务使用 AI 但没有自有超算。
+
+\textbf{作者回应：} 这是测量零而非真实零。TOP500 仅记录安装于主权领土内的超级计算机。我们在修改稿 §2 添加了以下范围声明：
+
+\medskip
+\noindent\fcolorbox{gray!30}{gray!5}{%
+  \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{%
+    \small ``本文的 TOP500 指标测量的是国家级超级计算基础设施，属于前沿 AI 算力的一个子集。许多发展中国家通过云计算服务（AWS、Azure、Google Cloud）使用 AI 但并不拥有超算系统。因此本文结果应解读为高端算力基础设施的经济效应，而非 AI 采纳的总效应。''
+  }%
+}
+
+\medskip
+\textbf{修改位置：} 正文 §2（数据/测量）。
+\end{responseblock}
+
+\begin{responseblock}{R2.3 · 交互项缺少主效应}
+\reviewercomment{表 2 交互模型缺少产业结构份额的主效应（Brambor, Clark \& Golder, 2006）。}
+
+\textbf{审稿人意见：} 表 2 交互模型缺少产业结构份额（$\text{wdi\_industry\_value\_added\_gdp}$, $\text{wdi\_services\_value\_added\_gdp}$）的主效应项（Brambor, Clark \& Golder, 2006）。
+
+\textbf{作者回应：} 我们已在交互模型中添加了这两个变量的主效应项。在固定效应设定下，这些份额的时间维度变异有限，但遵循 Brambor et al.\ (2006) 的建议，报告含主效应的模型更为严谨。
+
+\textbf{修改位置：} 表 2。
+\end{responseblock}
+
+\begin{responseblock}{R2.4 · 表格报告规范}
+\reviewercomment{表 1 应补充聚类数、有识别变异的国别数、因变量均值等信息。}
+
+\textbf{审稿人意见：} 表 1 应补充聚类数、有识别变异的国别数、因变量均值等期刊要求报告的信息。
+
+\textbf{作者回应：} 已更新表 1 的注释行，补充：Number of clusters (countries): 44; Countries with identifying variation: 44; Number of countries: 185; Mean of DV: \authorfill{填入均值}; FE: country + year.
+
+\textbf{修改位置：} 表 1 注释。
+\end{responseblock}
+
+\begin{responseblock}{R2.5 · 三项稳健性检验}
+\reviewercomment{建议补充：排除高收入 OECD、排除极端增长、5 年窗口替代因变量。}
+
+\textbf{审稿人意见：} 建议补充三项稳健性检验：排除高收入 OECD 国家、排除极端增长观测（$|\text{growth}| > 0.30$）、5 年窗口增长替代因变量。
+
+\textbf{作者回应：} 我们已在附录中增加了三个稳健性表格：
+\begin{itemize}
+  \item 表 A4：排除高收入 OECD 国家后的主模型；
+  \item 表 A5：排除 $|\text{growth\_annual}| > 0.30$ 的极端观测后的主模型；
+  \item 表 A6：以 $\text{growth\_5yr}$ 为因变量的主模型。
+\end{itemize}
+三位结果与基准设定一致/有差异，详见以下汇总：\authorfill{填入汇总}。
+
+\textbf{修改位置：} 附录表 A4--A6。
+\end{responseblock}
+
+\begin{responseblock}{R2.6 · set.seed()}
+\reviewercomment{R 分析脚本缺少 set.seed()。}
+
+\textbf{审稿人意见：} R 分析脚本缺少 \texttt{set.seed()}。
+
+\textbf{作者回应：} 已在 \texttt{scripts/run\_analysis.R} 第 1 行添加 \texttt{set.seed(42)}。
+
+\textbf{修改位置：} \texttt{scripts/run\_analysis.R:1}。
+\end{responseblock}
+
+\newpage
+
+% ================================================================
+% REVISION MATRIX
+% ================================================================
+\section{返修矩阵}
+\label{sec:matrix}
+
+表~\ref{tab:matrix} 提供了每条意见的追溯性行动表。
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{longtable}{p{1.1cm}p{2.8cm}p{1.3cm}p{1.2cm}p{0.8cm}p{1.5cm}p{3.0cm}p{1.2cm}}
+\toprule
+ID & 意见摘要 & 类型 & MIDA & 严重度 & 状态 & 行动 & 位置 \\
+\midrule
+\endfirsthead
+\multicolumn{8}{c}{\textit{续前页}}\\
+\toprule
+ID & 意见摘要 & 类型 & MIDA & 严重度 & 状态 & 行动 & 位置 \\
+\midrule
+\endhead
+\midrule
+\multicolumn{8}{r}{\textit{续后页}}\\
+\endfoot
+\bottomrule
+\endlastfoot
+
+R1.1 & 35/44 always-treated; only 9 late entrants & identification & data\_strategy & \cellsevhigh{high} & \cellacc{accept} & 连续 log\_total\_rmax 主设定，二元 DID 移至附录 & 正文§3.1，附录A \\
+R1.2 & pwt\_tfp\_lag1 is bad control (post-treatment) & model & model & \cellsevhigh{high} & \cellacc{accept} & 移除主设定中的 pwt\_tfp\_lag1，报告含/不含 TFP 列 & 表1 \\
+R1.3 & 44 clusters below threshold & inference & answer\_strategy & \cellsevhigh{high} & \cellacc{accept} & 运行 wild cluster bootstrap，报告bootstrap p值 & 表1注释，§3.3 \\
+R1.4 & pwt\_import\_share negative; coefficient uninterpretable & data & data\_strategy & \cellsevmed{medium} & \cellacc{accept} & 使用 abs 版本，加PWT编码注释 & 表1注释 \\
+R1.5 & 35\% sample loss without diagnostics & data & data\_strategy & \cellsevmed{medium} & \cellacc{accept} & 添加缺失诊断，报告样本比较 & 附录C \\
+R1.6 & Missing recent literature & literature & inquiry & \cellsevhigh{high} & \cellacc{accept} & 检索并加入 Autor \& Salomons 2024, Brynjolfsson et al.\ 2025 & §1--2, §5 \\
+R1.7 & Only PWT growth, suggest Maddison robustness & robustness & answer\_strategy & \cellsevmed{medium} & \cellacc{accept} & 以 maddison\_growth\_annual 为 DV 估计主模型 & 表A3 \\
+R2.1 & Human capital index too indirect as channel proxy & measurement & model & \cellsevhigh{high} & \cellna{needs\_author} & 作者决策：升级代理或降级用语 & §4 \\
+R2.2 & 141/185 zeros: measurement zero? Cloud AI not captured & measurement & data\_strategy & \cellsevhigh{high} & \cellcl{clarify} & 在§2添加范围声明 & §2 \\
+R2.3 & Interaction model lacks constitutive terms & model & model & \cellsevmed{medium} & \cellacc{accept} & 添加产业结构主效应 & 表2 \\
+R2.4 & Table 1 missing cluster count, DV mean & formatting & report & \cellsevmed{medium} & \cellacc{accept} & 更新 modelsummary notes & 表1注释 \\
+R2.5 & Robustness: exclude OECD, extreme growth, 5yr window & robustness & answer\_strategy & \cellsevmed{medium} & \cellacc{accept} & 三项稳健性回归 & 表A4--A6 \\
+R2.6 & Missing set.seed() in R script & formatting & redesign & \cellsevlow{low} & \cellacc{accept} & 添加 set.seed(42) & run\_analysis.R:1 \\
+
+\end{longtable}
+\endgroup
+
+\vspace{8pt}
+\textbf{统计：} 共 13 项 | R1: 7 项 | R2: 6 项 |
+High: 6 | Medium: 6 | Low: 1 |
+Accept: 11 | Needs\_Author: 1 | Clarify: 1
+
+\newpage
+
+% ================================================================
+% REFERENCE LIST
+% ================================================================
+\section*{参考文献}
+\addcontentsline{toc}{section}{参考文献}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

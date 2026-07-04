@@ -99,8 +99,8 @@
   - **COVID-19**: Macao 2020 (−0.80), Aruba 2020 (−0.31), Maldives 2020 (−0.43)
   - **石油繁荣**: Equatorial Guinea 1997 (+0.63), Guyana 2022 (+0.48)
   - **苏联解体**: Armenia 1992 (−0.53), Georgia 1992-1993, Moldova 1992-1994
-- **解决方案**: 按项目规程创建 `growth_annual_winsor`（p1-p99 截尾，210 个观测被 clip）
-- **影响**: 主分析使用截尾后的被解释变量。稳健性检查中用原始 `growth_annual` 排除 |growth| > 0.30
+- **解决方案**: 按项目规程创建 `growth_annual_缩尾`（p1-p99 缩尾，210 个观测被 clip）
+- **影响**: 主分析使用缩尾后的被解释变量。稳健性检查中用原始 `growth_annual` 排除 |growth| > 0.30
 
 ---
 
@@ -115,7 +115,7 @@
 | 创建 `pwt_import_share_lag1_abs` | 滞后项同理 | ✅ |
 | 创建 `pwt_trade_openness_lag1` | 滞后项同理 | ✅ |
 | Clip `log_total_rmax` to ≥ 0 | 4 个极小值归零 | — (in-place) |
-| 创建 `growth_annual_winsor` | p1-p99 截尾, 210 obs clipped | ✅ |
+| 创建 `growth_annual_缩尾` | p1-p99 缩尾, 210 obs 缩尾 | ✅ |
 
 - **输入**: `data/interim/growth_with_compute.parquet` (11,840 × 31)
 - **输出**: `data/interim/growth_with_compute_clean.parquet` (11,840 × 36)
@@ -131,7 +131,7 @@
 | 分析单位 | 国家-年份, 185 国, 1960-2023 |
 | `growth_annual` 分布 | N=10,426, mean=0.0187, std=0.0648 |
 | `log_total_rmax` 非零 | N=937, mean=10.79, min=0.00 |
-| `growth_annual_winsor` 范围 | [-0.1919, 0.1688] |
+| `growth_annual_缩尾` 范围 | [-0.1919, 0.1688] |
 | 控制变量滞后 | ✅ 全部 `_lag1` |
 | 缺失处理规则 | 禁止均值填补、禁止跨国插值 |
 | 进口份额符号 | ✅ 已创建 `_abs` 变量 |

@@ -47,20 +47,24 @@ def read_excel_sheet(path: Path, required_columns: Iterable[str]) -> pd.DataFram
 
 
 def require_raw_inputs() -> None:
-    missing = [
+    missing_dataverse = [
         str(spec["raw_path"])
         for spec in DATAVERSE_FILES.values()
         if not spec["raw_path"].exists()
     ]
-    missing.extend(
+    missing_wdi = sorted(
         str(DATA_RAW / "wdi" / f"{indicator}.json")
         for indicator in WDI_INDICATORS
         if not (DATA_RAW / "wdi" / f"{indicator}.json").exists()
     )
     if not (DATA_RAW / "wdi" / "countries.json").exists():
-        missing.append(str(DATA_RAW / "wdi" / "countries.json"))
-    if missing:
-        raise FileNotFoundError("Missing raw inputs. Run scripts/download_data.py first:\n" + "\n".join(missing))
+        missing_wdi.append(str(DATA_RAW / "wdi" / "countries.json"))
+    if missing_dataverse:
+        raise FileNotFoundError("Missing critical Dataverse inputs:\n" + "\n".join(missing_dataverse))
+    if missing_wdi:
+        print(f"  [WDI] {len(missing_wdi)} indicator files missing, will skip in clean_wdi:")
+        for m in missing_wdi:
+            print(f"    - {m}")
 
 
 def add_growth_columns(df: pl.DataFrame, value_col: str = "log_gdp_pc") -> pl.DataFrame:
@@ -184,8 +188,14 @@ def country_metadata() -> set[str]:
 def clean_wdi() -> pl.DataFrame:
     valid_iso3 = country_metadata()
     long_frames: list[pl.DataFrame] = []
+    missing_indicators: list[str] = []
     for indicator, variable in WDI_INDICATORS.items():
-        payload = json.loads((DATA_RAW / "wdi" / f"{indicator}.json").read_text(encoding="utf-8"))
+        file_path = DATA_RAW / "wdi" / f"{indicator}.json"
+        if not file_path.exists() or file_path.stat().st_size == 0:
+            missing_indicators.append(indicator)
+            print(f"  [WDI skip] {indicator} -> {variable} (raw file missing or empty)")
+            continue
+        payload = json.loads(file_path.read_text(encoding="utf-8"))
         rows = payload[1] if isinstance(payload, list) and len(payload) > 1 else []
         records = [
             {
@@ -214,6 +224,9 @@ def clean_wdi() -> pl.DataFrame:
             pl.col("value").cast(pl.Float64, strict=False),
         ).filter(pl.col("iso3").is_in(valid_iso3))
         long_frames.append(frame)
+
+    if missing_indicators:
+        print(f"  [WDI] {len(missing_indicators)} indicators missing, proceeding with {len(long_frames)} available")
 
     long = pl.concat(long_frames, how="vertical")
     wide = (

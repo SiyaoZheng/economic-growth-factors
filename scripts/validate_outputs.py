@@ -72,34 +72,44 @@ def write_extreme_growth(growth: pl.DataFrame) -> None:
 
 
 def write_source_consistency(growth: pl.DataFrame) -> dict[str, float | int | None]:
-    comparisons = growth.select(
-        "iso3",
-        "country",
-        "year",
-        "growth_annual",
-        "wdi_gdp_growth_annual_pct",
-        "maddison_growth_annual",
-    ).with_columns(
-        (pl.col("wdi_gdp_growth_annual_pct") / 100).alias("wdi_growth_decimal"),
+    has_wdi_growth = "wdi_gdp_growth_annual_pct" in growth.columns
+    select_cols = ["iso3", "country", "year", "growth_annual"]
+    if has_wdi_growth:
+        select_cols.append("wdi_gdp_growth_annual_pct")
+    select_cols.append("maddison_growth_annual")
+    comparisons = growth.select(select_cols)
+    if has_wdi_growth:
+        comparisons = comparisons.with_columns(
+            (pl.col("wdi_gdp_growth_annual_pct") / 100).alias("wdi_growth_decimal"),
+        )
+    comparisons = comparisons.with_columns(
         (pl.col("growth_annual") - pl.col("maddison_growth_annual")).abs().alias("abs_diff_maddison"),
-        (pl.col("growth_annual") - (pl.col("wdi_gdp_growth_annual_pct") / 100)).abs().alias("abs_diff_wdi"),
     )
-    large = comparisons.filter(
-        (pl.col("abs_diff_maddison") > 0.10) | (pl.col("abs_diff_wdi") > 0.10)
-    ).sort(["abs_diff_wdi", "abs_diff_maddison"], descending=True)
+    if has_wdi_growth:
+        comparisons = comparisons.with_columns(
+            (pl.col("growth_annual") - (pl.col("wdi_gdp_growth_annual_pct") / 100)).abs().alias("abs_diff_wdi"),
+        )
+    if has_wdi_growth:
+        large = comparisons.filter(
+            (pl.col("abs_diff_maddison") > 0.10) | (pl.col("abs_diff_wdi") > 0.10)
+        ).sort(["abs_diff_wdi", "abs_diff_maddison"], descending=True)
+    else:
+        large = comparisons.filter(
+            (pl.col("abs_diff_maddison") > 0.10)
+        ).sort(["abs_diff_maddison"], descending=True)
     large.write_csv(REPORTS / "source_consistency.csv")
 
     wdi_overlap = comparisons.filter(
         pl.col("growth_annual").is_not_null() & pl.col("wdi_growth_decimal").is_not_null()
-    )
+    ) if has_wdi_growth else pl.DataFrame(schema={"growth_annual": pl.Float64, "wdi_growth_decimal": pl.Float64})
     maddison_overlap = comparisons.filter(
         pl.col("growth_annual").is_not_null() & pl.col("maddison_growth_annual").is_not_null()
     )
     return {
-        "wdi_overlap_rows": wdi_overlap.height,
+        "wdi_overlap_rows": wdi_overlap.height if has_wdi_growth else 0,
         "maddison_overlap_rows": maddison_overlap.height,
         "wdi_corr": wdi_overlap.select(pl.corr("growth_annual", "wdi_growth_decimal")).item()
-        if wdi_overlap.height > 1
+        if (has_wdi_growth and wdi_overlap.height > 1)
         else None,
         "maddison_corr": maddison_overlap.select(pl.corr("growth_annual", "maddison_growth_annual")).item()
         if maddison_overlap.height > 1

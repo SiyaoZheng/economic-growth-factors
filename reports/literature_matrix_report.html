@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Literature Matrix — AI算力与经济增长</title>
+<style>
+:root {
+  --bg: #f8f9fa;
+  --card-bg: #ffffff;
+  --text: #1a1a2e;
+  --text-secondary: #555;
+  --border: #e0e0e0;
+  --accent: #2563eb;
+  --accent-light: #dbeafe;
+  --tag-bg: #f0f0f0;
+  --tag-text: #444;
+  --cluster-colors: #2563eb, #7c3aed, #dc2626, #ea580c, #059669, #0891b2, #4f46e5;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-hover: 0 4px 16px rgba(0,0,0,0.12);
+  --sidebar-bg: #1e293b;
+  --sidebar-text: #cbd5e1;
+  --sidebar-active: #3b82f6;
+}
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --card-bg: #1e293b;
+  --text: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --border: #334155;
+  --accent: #60a5fa;
+  --accent-light: #1e3a5f;
+  --tag-bg: #334155;
+  --tag-text: #cbd5e1;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-hover: 0 4px 16px rgba(0,0,0,0.5);
+  --sidebar-bg: #0f172a;
+  --sidebar-text: #94a3b8;
+}
+
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif; background:var(--bg); color:var(--text); display:flex; min-height:100vh; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+
+/* Sidebar */
+.sidebar {
+  width:260px; min-width:260px; background:var(--sidebar-bg); color:var(--sidebar-text);
+  padding:24px 0; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto;
+  border-right:1px solid rgba(255,255,255,0.06);
+}
+.sidebar-header { padding:0 20px 20px; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:12px; }
+.sidebar-header h1 { font-size:16px; font-weight:700; color:#f1f5f9; line-height:1.4; }
+.sidebar-header .subtitle { font-size:11px; color:#64748b; margin-top:4px; }
+.sidebar-section { padding:8px 20px; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:#64748b; margin-top:8px; }
+.cluster-item {
+  display:flex; align-items:center; gap:8px; padding:8px 20px; cursor:pointer; font-size:13px; transition:background .15s;
+  border:none; background:none; color:var(--sidebar-text); width:100%; text-align:left;
+}
+.cluster-item:hover { background:rgba(255,255,255,0.06); }
+.cluster-item.active { background:rgba(59,130,246,0.15); color:#93c5fd; }
+.cluster-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.cluster-count { margin-left:auto; font-size:11px; color:#64748b; }
+
+/* Stats row */
+.stats { padding:12px 20px; display:flex; gap:12px; flex-wrap:wrap; }
+.stat { background:rgba(255,255,255,0.04); border-radius:6px; padding:8px 12px; text-align:center; flex:1; min-width:60px; }
+.stat-val { font-size:18px; font-weight:700; color:#f1f5f9; }
+.stat-label { font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; }
+
+/* Main content */
+.main { flex:1; display:flex; flex-direction:column; }
+.topbar {
+  display:flex; align-items:center; gap:12px; padding:16px 24px; border-bottom:1px solid var(--border);
+  background:var(--card-bg); position:sticky; top:0; z-index:10;
+}
+.search-box {
+  flex:1; max-width:480px; padding:8px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px;
+  background:var(--bg); color:var(--text); outline:none; transition:border-color .2s;
+}
+.search-box:focus { border-color:var(--accent); }
+.filter-row { display:flex; gap:8px; flex-wrap:wrap; }
+.filter-btn {
+  padding:6px 14px; border:1px solid var(--border); border-radius:6px; font-size:12px; cursor:pointer;
+  background:var(--card-bg); color:var(--text-secondary); transition:all .15s;
+}
+.filter-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+.view-toggle { display:flex; gap:2px; margin-left:auto; }
+.view-btn {
+  padding:6px 12px; border:1px solid var(--border); font-size:12px; cursor:pointer;
+  background:var(--bg); color:var(--text-secondary); transition:all .15s;
+}
+.view-btn:first-child { border-radius:6px 0 0 6px; }
+.view-btn:last-child { border-radius:0 6px 6px 0; }
+.view-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+.content { padding:24px; flex:1; overflow-y:auto; }
+.cluster-section { margin-bottom:32px; }
+.cluster-heading {
+  display:flex; align-items:center; gap:10px; margin-bottom:16px; padding-bottom:8px; border-bottom:2px solid var(--border);
+}
+.cluster-heading h2 { font-size:18px; font-weight:700; }
+.cluster-heading .badge { background:var(--tag-bg); color:var(--tag-text); padding:2px 10px; border-radius:12px; font-size:12px; }
+
+/* Grid view */
+.papers-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(380px, 1fr)); gap:16px; }
+.paper-card {
+  background:var(--card-bg); border-radius:10px; border:1px solid var(--border); padding:20px;
+  box-shadow:var(--shadow); transition:box-shadow .2s,transform .15s; cursor:pointer; display:flex; flex-direction:column; gap:10px;
+}
+.paper-card:hover { box-shadow:var(--shadow-hover); transform:translateY(-1px); }
+.card-header { display:flex; align-items:flex-start; gap:8px; }
+.card-year {
+  background:var(--accent-light); color:var(--accent); font-weight:700; padding:2px 8px; border-radius:4px;
+  font-size:12px; flex-shrink:0;
+}
+.card-title { font-size:14px; font-weight:600; line-height:1.45; color:var(--text); }
+.card-meta { display:flex; flex-wrap:wrap; gap:6px; font-size:11px; color:var(--text-secondary); }
+.card-meta span { padding:2px 8px; background:var(--tag-bg); border-radius:4px; }
+.card-findings { font-size:13px; color:var(--text-secondary); line-height:1.55; display:-webkit-box; -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden; }
+.card-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:auto; }
+.tag {
+  font-size:10px; padding:2px 8px; border-radius:4px; background:var(--tag-bg); color:var(--tag-text);
+}
+.tag.verified { background:#dcfce7; color:#166534; }
+[data-theme="dark"] .tag.verified { background:#064e3b; color:#6ee7b7; }
+.tag.secondary { background:#fef3c7; color:#92400e; }
+[data-theme="dark"] .tag.secondary { background:#451a03; color:#fbbf24; }
+.tag.synth { background:#ede9fe; color:#5b21b6; }
+[data-theme="dark"] .tag.synth { background:#2e1065; color:#c4b5fd; }
+
+/* List view */
+.papers-list { display:flex; flex-direction:column; gap:8px; }
+.paper-row {
+  background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:14px 18px;
+  display:flex; align-items:center; gap:16px; cursor:pointer; transition:box-shadow .15s;
+  box-shadow:var(--shadow);
+}
+.paper-row:hover { box-shadow:var(--shadow-hover); }
+.row-year { font-weight:700; color:var(--accent); min-width:44px; font-size:13px; }
+.row-citation { font-size:13px; font-weight:600; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.row-meta { font-size:11px; color:var(--text-secondary); display:flex; gap:6px; flex-shrink:0; }
+
+/* Detail modal */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; display:flex; align-items:center; justify-content:center;
+  padding:24px;
+}
+.modal {
+  background:var(--card-bg); border-radius:12px; max-width:720px; width:100%; max-height:85vh;
+  overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3); padding:28px;
+}
+.modal h3 { font-size:18px; margin-bottom:16px; }
+.modal-section { margin-bottom:16px; }
+.modal-section h4 { font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary); margin-bottom:4px; }
+.modal-section p { font-size:13px; line-height:1.6; color:var(--text); }
+.modal-close {
+  position:sticky; top:0; float:right; border:none; background:var(--tag-bg); color:var(--text);
+  width:28px; height:28px; border-radius:50%; font-size:16px; cursor:pointer; display:flex;
+  align-items:center; justify-content:center; transition:background .15s;
+}
+.modal-close:hover { background:var(--border); }
+.modal-actions { display:flex; gap:8px; margin-top:16px; }
+.modal-actions a {
+  font-size:12px; padding:6px 14px; border-radius:6px; border:1px solid var(--border);
+  color:var(--text-secondary); transition:all .15s; display:inline-flex; align-items:center; gap:4px;
+}
+.modal-actions a:hover { border-color:var(--accent); color:var(--accent); text-decoration:none; }
+
+/* Empty state */
+.empty { text-align:center; padding:64px 24px; color:var(--text-secondary); }
+.empty h3 { font-size:16px; margin-bottom:8px; color:var(--text); }
+
+/* Responsive */
+@media (max-width:768px) {
+  body { flex-direction:column; }
+  .sidebar { width:100%; min-width:100%; height:auto; position:relative; flex-direction:row; flex-wrap:wrap; padding:12px 16px; }
+  .sidebar-header { border:none; padding:0; margin:0; }
+  .papers-grid { grid-template-columns:1fr; }
+  .topbar { flex-wrap:wrap; }
+}
+</style>
+</head>
+<body data-theme="light">
+
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h1>📚 Literature Matrix</h1>
+    <div class="subtitle">AI算力与经济增长 · 20篇文献</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-val">20</div><div class="stat-label">Papers</div></div>
+    <div class="stat"><div class="stat-val">11</div><div class="stat-label">Verified</div></div>
+    <div class="stat"><div class="stat-val">7</div><div class="stat-label">Clusters</div></div>
+  </div>
+  <div class="sidebar-section">证据聚类</div>
+  <button class="cluster-item active" data-cluster="all" onclick="filterByCluster('all')">
+    <span class="cluster-dot" style="background:#94a3b8"></span> 全部文献 <span class="cluster-count">20</span>
+  </button>
+  <div id="cluster-nav"></div>
+  <div class="sidebar-section">筛选</div>
+  <button class="cluster-item" onclick="filterByVerification('verified_primary')">
+    ✅ 一手来源 verified <span class="cluster-count">11</span>
+  </button>
+  <button class="cluster-item" onclick="filterByVerification('secondary_only')">
+    📄 二手来源 <span class="cluster-count">9</span>
+  </button>
+  <div class="sidebar-section" style="margin-top:auto">主题</div>
+  <button class="cluster-item" onclick="toggleTheme()" id="theme-btn">🌙 暗色模式</button>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <input class="search-box" type="text" placeholder="搜索作者、标题、关键词…" oninput="doSearch()" id="search-input">
+    <div class="filter-row" id="filter-btns">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">全部</button>
+      <button class="filter-btn" data-filter="empirical" onclick="setFilter('empirical', this)">实证</button>
+      <button class="filter-btn" data-filter="theoretical" onclick="setFilter('theoretical', this)">理论</button>
+      <button class="filter-btn" data-filter="survey" onclick="setFilter('survey', this)">综述</button>
+    </div>
+    <div class="view-toggle">
+      <button class="view-btn active" data-view="grid" onclick="setView('grid')">📐 卡片</button>
+      <button class="view-btn" data-view="list" onclick="setView('list')">📋 列表</button>
+    </div>
+  </div>
+  <div class="content" id="content">
+  </div>
+</main>
+
+<div id="modal-container"></div>
+
+<script>
+const PAPERS = [{"pid": "acemoglu_2019_automation_new_tasks", "citation": "Acemoglu & Restrepo (2019), Automation and New Tasks: How Technology Displaces and Reinstates Labor", "authors": "Acemoglu D, Restrepo P", "year": "2019", "status": "journal_article", "venue": "Journal of Economic Perspectives", "doi": "10.1257/jep.33.2.3", "url": "https://www.aeaweb.org/articles?id=10.1257/jep.33.2.3", "verification": "verified_primary", "research_question": "How does automation displace labor and how can new tasks reinstate labor demand?", "setting": "Theoretical framework; US labor market context", "treatment": "Task-based automation vs. new task creation", "outcomes": "Employment, labor share, productivity", "data_sources": "N/A (theoretical)", "identification": "Task-based model (theoretical)", "fixed_effects": "N/A (theoretical model)", "validation": "N/A", "findings": "Automation reduces labor share; new tasks can restore it. Long-run growth depends on the race between automation and new task creation.", "limitations": "Theoretical model; limited direct empirical testing at time of publication", "relevance": "Core theoretical anchor: task-based model of automation displacement vs. new-task reinstatement. Foundation for our channel decomposition.", "open_questions": "How to operationalize automation vs new-task channels in cross-country panel with compute as treatment?", "cluster": "概念层: AI as GPT → growth", "synthesis": "needs_author"}, {"pid": "acemoglu_2018_race_man_machine", "citation": "Acemoglu & Restrepo (2018), The Race between Man and Machine: Implications of Technology for Growth, Factor Shares, and Employment", "authors": "Acemoglu D, Restrepo P", "year": "2018", "status": "journal_article", "venue": "American Economic Review", "doi": "10.1257/aer.20160696", "url": "https://www.aeaweb.org/articles?id=10.1257/aer.20160696", "verification": "verified_primary", "research_question": "What are the implications of automation technology for economic growth, factor shares, and employment?", "setting": "Theoretical model + US industry data", "treatment": "Automation and new task technologies", "outcomes": "GDP growth, labor share, employment", "data_sources": "US BEA and industry data", "identification": "Task-based model with endogenous technology choice", "fixed_effects": "N/A (calibrated model)", "validation": "Model calibration and robustness", "findings": "Technology can reduce labor share and employment unless new tasks are created sufficiently fast. The race between automation and new tasks determines growth outcomes.", "limitations": "Calibrated model; not direct cross-country empirical test", "relevance": "Theoretical foundation for understanding how compute capacity (as a proxy for automation technology) affects growth through labor share and employment channels.", "open_questions": "Does the race framework apply to developing countries with different industrial structures?", "cluster": "概念层: AI as GPT → growth", "synthesis": "needs_author"}, {"pid": "acemoglu_2025_simple_macro_ai", "citation": "Acemoglu (2025), The Simple Macroeconomics of AI", "authors": "Acemoglu D", "year": "2025", "status": "journal_article", "venue": "Economic Policy", "doi": "10.3386/w32487", "url": "https://academic.oup.com/economicpolicy/article-abstract/40/121/13/7728473", "verification": "verified_primary", "research_question": "What are the aggregate macroeconomic effects of AI on productivity and growth?", "setting": "Macro-level estimates based on task exposure and AI substitution elasticities", "treatment": "AI adoption/task automation", "outcomes": "TFP growth, GDP growth", "data_sources": "Occupational task data, AI exposure estimates", "identification": "Task-based macro model with AI-specific automation elasticities", "fixed_effects": "N/A (macro calibration)", "validation": "Sensitivity to parameter assumptions", "findings": "AI will increase TFP by ~0.53% over 10 years — modest macro effects. GDP effects are small relative to hype; most gains captured by capital.", "limitations": "Estimates rely on assumptions about AI substitution elasticities; does not account for new-task creation at scale", "relevance": "Directly relevant: provides benchmark estimates for AI macro effects. Our study tests whether compute capacity (a real measure, not estimated AI exposure) shows different magnitudes.", "open_questions": "Are the modest Acemoglu 2025 estimates due to underestimation of AI's new-task creation channel?", "cluster": "概念层: AI as GPT → growth", "synthesis": "needs_author"}, {"pid": "acemoglu_2018_ai_automation_work", "citation": "Acemoglu & Restrepo (2018), Artificial Intelligence, Automation, and Work", "authors": "Acemoglu D, Restrepo P", "year": "2018", "status": "book_chapter", "venue": "NBER Chapters / The Economics of AI", "doi": "10.3386/w24196", "url": "https://www.nber.org/system/files/chapters/c14027/c14027.pdf", "verification": "verified_primary", "research_question": "How does AI affect automation and work, and what are the implications for labor markets?", "setting": "Theoretical + descriptive; US labor market context", "treatment": "AI as automation technology", "outcomes": "Employment, wages, labor share, productivity", "data_sources": "Descriptive; cites existing empirical work", "identification": "Task-based framework applied to AI", "fixed_effects": "N/A", "validation": "N/A", "findings": "AI will affect tasks differently from prior automation: it can automate both routine and non-routine cognitive tasks. The net effect depends on new task creation and productivity effects.", "limitations": "Pre-dates GPT-era AI; based on pre-2018 AI capabilities", "relevance": "Pre-GPT benchmark for AI+automation theory. Useful contrast with post-ChatGPT empirical findings.", "open_questions": "How much has the ChatGPT/GPT-4 era changed the task-based predictions?", "cluster": "机制: 新任务恢复渠道", "synthesis": "needs_author"}, {"pid": "restrepo_2024_automation_survey", "citation": "Restrepo (2024), Automation: Theory, Evidence, and Outlook", "authors": "Restrepo P", "year": "2024", "status": "journal_article", "venue": "Annual Review of Economics", "doi": "10.1146/annurev-economics-090523-113355", "url": "https://www.annualreviews.org/content/journals/10.1146/annurev-economics-090523-113355", "verification": "verified_primary", "research_question": "What does the theoretical and empirical literature say about automation's effects on labor markets and productivity?", "setting": "Survey of theoretical and empirical literature", "treatment": "Automation technologies broadly defined", "outcomes": "Employment, wages, productivity, inequality", "data_sources": "Surveys multiple datasets", "identification": "Literature survey (theory + empirics)", "fixed_effects": "N/A (survey)", "validation": "N/A", "findings": "Automation displaces workers but can increase productivity. The net effect depends on whether new tasks are created and whether displaced workers can transition. Evidence remains mixed on aggregate employment effects.", "limitations": "Survey article; does not provide new empirical estimates", "relevance": "State-of-the-art survey: situates our compute→growth study within the broader automation literature. Useful for framing and reference list.", "open_questions": "How does compute capacity (vs. robots or software) specifically fit into the automation survey's taxonomy?", "cluster": "机制: 自动化替代渠道", "synthesis": "needs_author"}, {"pid": "brynjolfsson_2017_ai_modern_productivity", "citation": "Brynjolfsson, Rock & Syverson (2017), Artificial Intelligence and the Modern Productivity Paradox", "authors": "Brynjolfsson E, Rock D, Syverson C", "year": "2017", "status": "book_chapter", "venue": "NBER / Economics of AI", "doi": "10.3386/w24001", "url": "https://www.nber.org/papers/w24001", "verification": "verified_primary", "research_question": "Why hasn't AI yet produced measurable productivity gains at the macro level despite rapid technological progress?", "setting": "US macro and industry data", "treatment": "AI as general purpose technology", "outcomes": "Productivity, GDP growth", "data_sources": "US BLS, BEA", "identification": "Descriptive + conceptual (GPT framework)", "fixed_effects": "N/A", "validation": "N/A", "findings": "AI faces implementation lags, complementary investment gaps, and measurement problems — similar to earlier GPTs like electricity. Productivity effects may take decades to materialize.", "limitations": "Conceptual argument, not causal empirical estimate", "relevance": "Classic AI-productivity-paradox paper. Our study tests whether compute capacity (measurable infrastructure) shows different timing than AI-patent or AI-exposure measures.", "open_questions": "Does compute capacity show earlier productivity effects than AI patent/exposure measures due to being an input (not an output) measure?", "cluster": "概念层: AI as GPT → growth", "synthesis": "needs_author"}, {"pid": "gonzales_2023_ai_innovation_growth", "citation": "Gonzales (2023), Implications of AI innovation on economic growth: a panel data study", "authors": "Gonzales JT", "year": "2023", "status": "journal_article", "venue": "Journal of Economic Structures", "doi": "10.1186/s40008-023-00307-w", "url": "https://link.springer.com/article/10.1186/s40008-023-00307-w", "verification": "verified_primary", "research_question": "Does AI innovation (measured by patents) affect economic growth in a cross-country panel?", "setting": "unclear from available source", "treatment": "AI patents (WIPO)", "outcomes": "Economic growth", "data_sources": "WIPO AI patent data", "identification": "unclear from available source", "fixed_effects": "unclear from available source", "validation": "unclear from available source", "findings": "The application of artificial intelligence (AI) across firms and industries warrants a line of research focused on determining its overall effect on economic variables. As a general-purpose technology (GPT), for example, AI helps in the production, marketing, and customer acquisition of firms, increasing their productivity and consumer reach. Aside from these, other effects of AI include enhanced quality of services, improved work accuracy and efficiency, and increased customer satisfaction. Hence, this study aims to gauge the impact of AI on the economy, specifically on long-run economic growth. This study conjectures a positive relationship between AI and economic growth. To test this hypothesis, this study makes use of a panel dataset of countries from 1970 to 2019, and the num", "limitations": "unclear from available source", "relevance": "Most directly comparable existing study: cross-country panel, AI measure → growth. Need full-text to extract methods and compare with our compute-based approach.", "open_questions": "What is the identification strategy? FE? GMM? What controls? What countries/years?", "cluster": "机制: 新任务恢复渠道", "synthesis": "needs_author"}, {"pid": "damioli_2021_ai_labor_productivity", "citation": "Damioli, Van Roy & Vertesy (2021), The impact of artificial intelligence on labor productivity", "authors": "Damioli G, Van Roy V, Vertesy D", "year": "2021", "status": "journal_article", "venue": "Eurasian Business Review", "doi": "10.1007/s40821-020-00172-8", "url": "https://link.springer.com/article/10.1007/s40821-020-00172-8", "verification": "verified_primary", "research_question": "What is the impact of AI patents on labor productivity across countries?", "setting": "unclear from available source", "treatment": "AI patents", "outcomes": "Labor productivity", "data_sources": "PATSTAT AI patents", "identification": "unclear from available source", "fixed_effects": "unclear from available source", "validation": "unclear from available source", "findings": "reports positive effects of AI on labor productivity; high-citation (513) benchmark paper", "limitations": "unclear from available source", "relevance": "High-citation empirical anchor: AI patents → productivity in cross-country panel. Important to compare patent-based vs. compute-based AI measures.", "open_questions": "What panel dimensions? What identification? How does AI patent measure compare to our compute capacity measure?", "cluster": "机制: 新任务恢复渠道", "synthesis": "needs_author"}, {"pid": "nguyen_2026_national_ai_strategies", "citation": "Nguyen (2026), National AI Strategies and Macroeconomic Performance: A Staggered DID Approach", "authors": "Nguyen PV", "year": "2026", "status": "working_paper", "venue": "SSRN", "doi": "no_doi: working paper or not indexed", "url": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6580199", "verification": "secondary_only", "research_question": "cross-country panel, staggered DID on national AI strategy adoption → GDP growth", "setting": "unclear from available source", "treatment": "National AI strategy adoption", "outcomes": "GDP growth, macroeconomic performance", "data_sources": "National AI strategy data, macro indicators", "identification": "Staggered DID (Callaway-SantAnna / Sun-Abraham)", "fixed_effects": "unclear from available source", "validation": "unclear from available source", "findings": "Governments worldwide have responded to the rise of artificial intelligence by publishing National AI Strategies (NAS), comprehensive policy documents that allocate public R&D funding, establish AI education programs, create governance frameworks, and signal long-term commitment to AI-driven transformation. This paper provides the first cross-country causal evaluation of these policy responses on macroeconomic outcomes. Exploiting the staggered adoption of NAS across 44 countries between 2017 and 2022 as a natural experiment, we estimate the average treatment effect on GDP per capita growth using a balanced panel spanning 2010 to 2024. Our main specification employs the Callaway and Sant’Anna (2021) doubly robust estimator, supplemented by five additional robust estimators. We find a consistent, statistically significant negative effect of NAS adoption on GDP per capita growth of approximately 0.4 to 1.0 percentage points, concentrated at three to four years post-adoption, followed", "limitations": "unclear from available source", "relevance": "Methodologically closest to our design: staggered DID on policy intervention. Important comparator.", "open_questions": "unclear from available source", "cluster": "测量: 专利 vs 算力", "synthesis": "needs_author"}, {"pid": "verschuere_2026_measuring_ai_productivity", "citation": "Verschuere & Cameron (2026), Measuring the Impact of AI on Productivity: Cross-Sectoral Evidence from 18 Economies Post-ChatGPT", "authors": "Verschuere B, Cameron A", "year": "2026", "status": "working_paper", "venue": "SSRN", "doi": "no_doi: working paper or not indexed", "url": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6663038", "verification": "secondary_only", "research_question": "18 economies, post-ChatGPT (2022-2024), cross-sectoral AI productivity impact", "setting": "unclear from available source", "treatment": "AI adoption (post-ChatGPT)", "outcomes": "Productivity (labor, TFP)", "data_sources": "Sectoral productivity data, AI exposure", "identification": "Cross-sectoral panel FE", "fixed_effects": "unclear from available source", "validation": "unclear from available source", "findings": "We measure the impact of artificial intelligence on aggregate productivity from observed sectoral outcomes rather than from forecasts of diffusion. Using a panel difference-in- differences specification on U.S. sectoral productivity data through 2025Q4, with AI exposure measured by the Workflow Completeness construct (C∗) of Verschuere and Cameron (2026a), we estimate that AI is contributing approximately $731 billion per year to U.S. trend productivity growth (95 percent CI [$413B, $1,048B]) across five primary sectors covering roughly 60 percent of GDP, raising aggregate growth on this base to +5.3 percent per year against a +1.3 percent counterfactual. The result is robust to every cluster-robust inference method we test and survives eight alternative- mechanism tests. Extending the methodology to eighteen additional economies, we identify positiv", "limitations": "unclear from available source", "relevance": "Directly estimates AI productivity impact post-ChatGPT. Key empirical comparator for timing of effects.", "open_questions": "unclear from available source", "cluster": "测量: 专利 vs 算力", "synthesis": "needs_author"}, {"pid": "georgieff_2022_ai_employment", "citation": "Georgieff & Hyee (2022), Artificial Intelligence and Employment: New Cross-Country Evidence", "authors": "Georgieff A, Hyee R", "year": "2022", "status": "journal_article", "venue": "Frontiers in AI", "doi": "10.3389/frai.2022.832736", "url": "https://www.frontiersin.org/journals/artificial-intelligence/articles/10.3389/frai.2022.832736/full", "verification": "verified_primary", "research_question": "Cross-country panel, AI exposure × employment", "setting": "unclear from available source", "treatment": "AI occupational exposure (Felten et al. AIOE)", "outcomes": "Employment by occupation", "data_sources": "O*NET, AIOE scores, labor force surveys", "identification": "Panel FE with occupation-level AI exposure interaction", "fixed_effects": "unclear from available source", "validation": "unclear from available source", "findings": "Recent years have seen impressive advances in artificial intelligence (AI) and this has stoked renewed concern about the impact of technological progress on the labor market, including on worker displacement. This paper looks at the possible links between AI and employment in a cross-country context. It adapts the AI occupational impact measure developed by Felten, Raj and Seamans-an indicator measuring the degree to which occupations rely on abilities in which AI has made the most progress-and extends it to 23 OECD countries. Overall, there appears to be no clear relationship between AI exposure and employment growth. However, in occupations where computer use is high, greater exposure to AI is linked to higher employment growth. The paper also finds suggestive evidence of a negative relationship between AI exposure and growth in average hours worked among occupations where computer use is low. One possible explanation is that partial automation by AI increases productivity dir", "limitations": "unclear from available source", "relevance": "Key empirical paper for AI employment effects. Uses AIOE scores that our R2 route also needs.", "open_questions": "unclear from available source", "cluster": "边界: OECD vs 发展中", "synthesis": "needs_author"}, {"pid": "ajuzieogu_cross_country_ai_causal", "citation": "Ajuzieogu (2025), Cross-Country Analysis of AI Adoption and Economic Growth: Causal Identification Strategies", "authors": "Ajuzieogu UC", "year": "2025", "status": "working_paper", "venue": "ResearchGate", "doi": "no_doi: working paper or not indexed", "url": "https://www.researchgate.net/publication/392078348", "verification": "secondary_only", "research_question": "Cross-country panel, causal ID for AI adoption → growth", "setting": "unclear from available source", "treatment": "AI adoption measures", "outcomes": "Economic growth", "data_sources": "Cross-country panel data", "identification": "Causal identification strategies (DID, IV discussion)", "fixed_effects": "unclear from available source", "validation": "unclear from available source", "findings": "The current study aims to uncover the important economic factors that affect how quickly countries with various income levels grow. To examine the causal and cointegration relationship, the following variables are taken: Gross Domestic Product (GDP), Gross Domestic Savings (GDS), Foreign Direct Investment (FDI), Government External Debt (ED), Personal Remittances (PR), Government Final Consumption Expenditure (GFCE), Private Final Consumption Expenditure (PFCE), Net Official Development Aid (NODA), and Consumer Price Index (CPI). The results are obtained using the ARDL Bounds Test, Engle-Granger Causality Tests, and Error Correction Models (ECM). The findings provide substantial evidence in favor of the traditional theories of economic growth, which contend that domestic savings account for a large portion of an economy's growth rate. Results from all economic classes show that saving propels the economy except in the least-developed countries, where external debt driv", "limitations": "unclear from available source", "relevance": "Directly relevant: discusses causal methods for AI-growth question. Methodological guide.", "open_questions": "unclear from available source", "cluster": "测量: 专利 vs 算力", "synthesis": "needs_author"}, {"pid": "zafar_2025_ai_patents_oecd", "citation": "Zafar et al. (2025), AI Patents and Economic Growth: A Growth Framework for OECD Countries", "authors": "Zafar S, Ullah I, Khan KS, Khattak H", "year": "2025", "status": "journal_article", "venue": "unknown", "doi": "no_doi: working paper or not indexed", "url": "no_stable_url: search result only", "verification": "secondary_only", "research_question": "OECD countries panel, AI patents → growth", "setting": "unclear from available source", "treatment": "AI patents (WIPO/IP5 classification)", "outcomes": "Economic growth", "data_sources": "WIPO patent data, OECD statistics", "identification": "Panel growth regression (likely FE/GMM)", "fixed_effects": "unclear from available source", "validation": "unclear from available source", "findings": "Artificial Intelligence has entered the mainstream, yet its contribution to the GDP of OECD countries remains largely unknown. This work focuses on the relationship between AI Innovation and GDP Growth, particularly AI Patents. In this work, three econometric techniques were employed: Fixed Effects (FE) models, FGLS-Parks regressions, and PCSC regressions. AI Patents positively correlate with growth for all models. Unemployment and government spending showed negative effects. The highly reanalysed conclusion records technological advancements of AI that were integrated into the economy. The unemployed and government spending positively correlate. Pegged to the artificial intelligence industry, the workforce offers great potential for the digital economy, growing in value to the (digitally) inclusive and sustainable (economy) of the (customer). The unemployed receive government support to promote and stimulate AI.", "limitations": "unclear from available source", "relevance": "Recent OECD-focused study. Useful to compare patent-based measure with our compute-based measure.", "open_questions": "unclear from available source", "cluster": "边界: OECD vs 发展中", "synthesis": "needs_author"}, {"pid": "sowa_2025_automation_ai_meta", "citation": "Sowa et al. (2025), Automation, AI, and Employment in the EU: Meta-Analysis of Macroeconomic Studies", "authors": "Sowa K, Przegalinska A, et al.", "year": "2025", "status": "working_paper", "venue": "SSRN", "doi": "no_doi: working paper or not indexed", "url": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6149787", "verification": "secondary_only", "research_question": "EU-focused meta-analysis of AI-automation-employment macro studies", "setting": "unclear from available source", "treatment": "AI and automation technologies", "outcomes": "Employment, labor markets", "data_sources": "Multiple studies (meta-analysis)", "identification": "Meta-analysis of macro studies", "fixed_effects": "unclear from available source", "validation": "unclear from available source", "findings": "This paper provides a meta-analysis of macroeconomic, quantitative studies that seek to identify the causal impact of automation and artificial intelligence (AI) on employment in the European Union (EU). We contribute an EU-focused synthesis that concentrates on macro-level evidence, complementing a literature dominated by micro task-based analyses and broader cross-country discussions. Using an AI-assisted workflow for search, screening, and extraction with human oversight, we map the available evidence and report clear methodological and knowledge gaps. A central finding is that the automation and robotics literature is comparatively developed, while credible causal macro evidence on AI itself remains sparse and fragmented. We treat this scarcity as a result that motivates a concrete research agenda. Across the core empirical studies and selected grey literature, the net employment effect appears modestly positive on the order of 1.5 to 2.0 percent, but the distr", "limitations": "unclear from available source", "relevance": "Useful for synthesis: summarizes what the literature consensus (or lack thereof) is on AI-employment effects.", "open_questions": "unclear from available source", "cluster": "机制: 自动化替代渠道", "synthesis": "needs_author"}, {"pid": "drago_2025_ai_adoption_drivers", "citation": "Drago et al. (2025), Macroeconomic and Labor Market Drivers of AI Adoption in Europe", "authors": "Drago C, Costantiello A, Savorgnan M, Leogrande A", "year": "2025", "status": "journal_article", "venue": "Economies (MDPI)", "doi": "no_doi: working paper or not indexed", "url": "https://www.mdpi.com/2227-7099/13/8/226", "verification": "secondary_only", "research_question": "EU panel, ML + panel data: what drives AI adoption?", "setting": "unclear from available source", "treatment": "Macro/labor market factors", "outcomes": "AI adoption (outcome, not treatment)", "data_sources": "EU panel data", "identification": "ML + panel regression", "fixed_effects": "unclear from available source", "validation": "unclear from available source", "findings": "This article investigates the macroeconomic and labor market conditions that shape the adoption of artificial intelligence (AI) technologies among large firms in Europe. Based on panel data econometrics and supervised machine learning techniques, we estimate how public health spending, access to credit, export activity, gross capital formation, inflation, openness to trade, and labor market structure influence the share of firms that adopt at least one AI technology. The research covers all 28 EU members between 2018 and 2023. We employ a set of robustness checks using a combination of fixed-effects, random-effects, and dynamic panel data specifications supported by Clustering and supervised learning techniques. We find that AI adoption is linked to higher GDP per capita, healthcare spending, inflation, and openness to trade but lower levels of credit, exports, and capital formation. Labor markets with higher proportions of salaried work, service occupations, and self-employment are li", "limitations": "unclear from available source", "relevance": "Reverse question (what drives AI adoption). Useful for thinking about endogeneity of our compute treatment.", "open_questions": "unclear from available source", "cluster": "边界: OECD vs 发展中", "synthesis": "needs_author"}, {"pid": "magoutas_2024_digital_growth", "citation": "Magoutas et al. (2024), Digital Progression and Economic Growth: ICT Impact on EU GDP", "authors": "Magoutas AI, Chaideftou M, Skandali D, Chountalas PT", "year": "2024", "status": "journal_article", "venue": "Journal of Risk and Financial Management", "doi": "no_doi: working paper or not indexed", "url": "https://www.mdpi.com/2227-7099/12/3/63", "verification": "secondary_only", "research_question": "EU panel, ICT advancement → GDP growth", "setting": "unclear from available source", "treatment": "Digital/ICT indicators", "outcomes": "GDP growth", "data_sources": "Eurostat, EU databases", "identification": "Panel regression", "fixed_effects": "unclear from available source", "validation": "unclear from available source", "findings": "This research thoroughly examines the dynamic relationship between the European Union’s economic growth and rapid advancements in Information and Communication Technology (ICT). Specifically, it assesses how certain ICT indicators are associated with significant economic growth. Utilizing an extensive dataset from the Digital Economy and Society Index 2022 (DESI), the Statistical Office of the European Union (EUROSTAT), and the Organisation for Economic Co-operation and Development (OECD), this study encompasses data from all 27 European Union member states. Employing structural equation modelling, our analysis illustrates the positive correlation between ICT development and the Gross Domestic Product (GDP) index. Our findings highlight the critical role of swiftly evolving technological landscapes, emphasizing the growing influence of new Artificial Intelligence (AI) technologies in business sectors. Furthermore, this study showcases the need to enhance human capital and expedite the", "limitations": "unclear from available source", "relevance": "Measurement reference: how to construct digital technology indices from multiple indicators.", "open_questions": "unclear from available source", "cluster": "范围: 零算力+TOP500本质", "synthesis": "needs_author"}, {"pid": "fruits_2026_ai_productivity_review", "citation": "Fruits & Stout (2026), AI, Productivity, and Labor Markets: A Review of the Empirical Evidence", "authors": "Fruits E, Stout K", "year": "2026", "status": "working_paper", "venue": "SSRN", "doi": "no_doi: working paper or not indexed", "url": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6323960", "verification": "secondary_only", "research_question": "Literature review: AI → productivity and labor market effects", "setting": "unclear from available source", "treatment": "AI technologies broadly", "outcomes": "Productivity, employment, wages", "data_sources": "Multiple studies (survey)", "identification": "Literature survey", "fixed_effects": "unclear from available source", "validation": "unclear from available source", "findings": "This issue brief reviews the empirical literature regarding the economic impact of generative AI through 2025. The authors discuss the “jagged frontier” of performance: while AI significantly boosts productivity in specific tasks like coding, writing, and customer service—often by 15% to 50%—these gains are most pronounced for lower-skilled workers, leading to “skill compression.” Despite fears of mass unemployment, aggregate data show limited labor-market disruption. Instead of widespread job loss, the evidence suggests a shift in “entry-level” roles, where AI automates tasks typically assigned to junior staff. Macroeconomic growth remains difficult to measure due to the “productivity J-curve,” in which firms must first invest in organizational changes before realizing financial gains. The authors conclude that because AI lowers entry costs for startups, policymakers should favor “strategic forbearance”—applying existing laws rather than creating new", "limitations": "unclear from available source", "relevance": "2026 survey paper. Useful for framing and identifying gaps our study fills.", "open_questions": "unclear from available source", "cluster": "测量: 专利 vs 算力", "synthesis": "needs_author"}, {"pid": "acemoglu_2020_competing_robots_france", "citation": "Acemoglu, Lelarge & Restrepo (2020), Competing with Robots: Firm-Level Evidence from France", "authors": "Acemoglu D, Lelarge C, Restrepo P", "year": "2020", "status": "journal_article", "venue": "AEA Papers & Proceedings", "doi": "10.1257/pandp.20201003", "url": "https://www.aeaweb.org/articles?id=10.1257/pandp.20201003", "verification": "verified_primary", "research_question": "French firm-level: robot adoption → employment, labor share, productivity", "setting": "unclear from available source", "treatment": "Industrial robot adoption", "outcomes": "Employment, labor share, value added", "data_sources": "French firm-level data", "identification": "Firm-level panel with robot adoption", "fixed_effects": "unclear from available source", "validation": "unclear from available source", "findings": "We study the firm-level implications of robot adoption in France. Of 55,390 firms in our sample, 598 adopted robots between 2010 and 2015, but these firms accounted for 20 percent of manufacturing employment. Adopters experienced significant declines in labor shares, the share of production workers in employment, and increases in value added and productivity. They expand their overall employment as well. However, this expansion comes at the expense of competitors, leading to an overall negative association between adoption and employment. Robot adoption has a large impact on the labor share because adopters are larger and grow faster than their competitors.", "limitations": "unclear from available source", "relevance": "Key empirical evidence for displacement effect of automation at micro level. Supports the task model predictions.", "open_questions": "unclear from available source", "cluster": "机制: 自动化替代渠道", "synthesis": "needs_author"}, {"pid": "acemoglu_2018_low_high_skill_automation", "citation": "Acemoglu & Restrepo (2018), Low-Skill and High-Skill Automation", "authors": "Acemoglu D, Restrepo P", "year": "2018", "status": "journal_article", "venue": "Journal of Human Capital", "doi": "10.1086/697242", "url": "https://www.journals.uchicago.edu/doi/abs/10.1086/697242", "verification": "verified_primary", "research_question": "Theoretical: heterogeneous effects of automation by skill level", "setting": "unclear from available source", "treatment": "Low-skill vs high-skill automation", "outcomes": "Employment, wages, inequality", "data_sources": "N/A (theoretical)", "identification": "Task-based model with skill heterogeneity", "fixed_effects": "unclear from available source", "validation": "unclear from available source", "findings": "We present a task-based model in which high- and low-skill workers compete against machines in the production of tasks. Low-skill (high-skill) automation corresponds to tasks performed by low-skill (high-skill) labor being taken over by capital. Automation displaces the type of labor it directly affects, depressing its wage. Through ripple effects, automation also affects the real wage of other workers. Counteracting these forces, automation creates a positive productivity effect, pushing up the price of all factors. Because capital adjusts to keep the interest rate constant, the productivity effect dominates in the long run. Finally, low-skill (high-skill) automation increases (reduces) wage inequality.", "limitations": "unclear from available source", "relevance": "Important for our channel decomposition: automation effects differ by task/skill type.", "open_questions": "unclear from available source", "cluster": "机制: 自动化替代渠道", "synthesis": "needs_author"}, {"pid": "caiyuezhou_2019_ai_high_quality_growth", "citation": "Cai & Chen (2019), AI and High-Quality Growth, High-Quality Employment [新技术革命下人工智能与高质量增长、高质量就业]", "authors": "Cai Yuezhuo, Chen Nan", "year": "2019", "status": "journal_article", "venue": "数量经济技术经济研究", "doi": "no_doi: working paper or not indexed", "url": "no_stable_url: search result only", "verification": "secondary_only", "research_question": "Chinese context: AI and high-quality growth/employment", "setting": "unclear from available source", "treatment": "AI technologies", "outcomes": "High-quality growth, employment", "data_sources": "Chinese data", "identification": "Theoretical + empirical", "fixed_effects": "unclear from available source", "validation": "unclear from available source", "findings": "在当今信息化时代，人工智能技术正以前所未有的速度推动着各行各业的发展，职业教育作为培养技术技能型人才的重要途径，其高质量发展同样离不开人工智能的赋能。基于此，本文旨在探讨在教育资源整合、教育工具革新及在教育评价完善上，人工智能与教育的融合及对教育高质量发展的促进。", "limitations": "unclear from available source", "relevance": "Chinese core journal. Key Chinese-language reference for AI-growth link.", "open_questions": "unclear from available source", "cluster": "范围: 零算力+TOP500本质", "synthesis": "needs_author"}];
+const CLUSTERS = ["机制: 新任务恢复渠道", "机制: 自动化替代渠道", "概念层: AI as GPT → growth", "测量: 专利 vs 算力", "范围: 零算力+TOP500本质", "边界: OECD vs 发展中"];
+
+const CLUSTER_COLORS = ['#2563eb','#7c3aed','#dc2626','#ea580c','#059669','#0891b2','#4f46e5'];
+const CLUSTER_EMOJI = {
+  '概念层: AI as GPT → growth': '💡',
+  '机制: 自动化替代渠道': '🤖',
+  '机制: 新任务恢复渠道': '✨',
+  '边界: OECD vs 发展中': '🌍',
+  '测量: 专利 vs 算力': '📏',
+  '范围: 零算力+TOP500本质': '🔬',
+  '竞争: 反向因果': '🔄',
+};
+
+let view = 'grid';
+let activeCluster = 'all';
+let activeFilter = 'all';
+let searchQuery = '';
+
+// Build cluster nav
+function buildClusterNav() {
+  const nav = document.getElementById('cluster-nav');
+  const papersByCluster = {};
+  PAPERS.forEach(p => {
+    if (!papersByCluster[p.cluster]) papersByCluster[p.cluster] = [];
+    papersByCluster[p.cluster].push(p);
+  });
+  CLUSTERS.forEach((c, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'cluster-item';
+    btn.setAttribute('data-cluster', c);
+    btn.onclick = () => filterByCluster(c);
+    const color = CLUSTER_COLORS[i % CLUSTER_COLORS.length];
+    const emoji = CLUSTER_EMOJI[c] || '📌';
+    btn.innerHTML = `<span class="cluster-dot" style="background:${color}"></span> ${emoji} ${c} <span class="cluster-count">${papersByCluster[c]?.length || 0}</span>`;
+    nav.appendChild(btn);
+  });
+}
+
+function filterByCluster(cluster) {
+  activeCluster = cluster;
+  document.querySelectorAll('.cluster-item').forEach(b => b.classList.remove('active'));
+  const items = document.querySelectorAll(`.cluster-item[data-cluster="${cluster}"]`);
+  items.forEach(b => b.classList.add('active'));
+  if (cluster === 'all') {
+    document.querySelector('.cluster-item[data-cluster="all"]').classList.add('active');
+  }
+  render();
+}
+
+function filterByVerification(level) {
+  activeCluster = '__verif_' + level;
+  document.querySelectorAll('.cluster-item').forEach(b => b.classList.remove('active'));
+  render();
+}
+
+function setFilter(f, el) {
+  activeFilter = f;
+  document.querySelectorAll('#filter-btns .filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function setView(v) {
+  view = v;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.view-btn[data-view="${v}"]`).classList.add('active');
+  render();
+}
+
+function doSearch() {
+  searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+  render();
+}
+
+function toggleTheme() {
+  const body = document.body;
+  const isDark = body.getAttribute('data-theme') === 'dark';
+  body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('theme-btn').innerHTML = isDark ? '🌙 暗色模式' : '☀️ 亮色模式';
+}
+
+function getFiltered() {
+  let papers = [...PAPERS];
+
+  // Cluster filter
+  if (activeCluster === 'all') {
+    // all
+  } else if (activeCluster.startsWith('__verif_')) {
+    const level = activeCluster.replace('__verif_', '');
+    papers = papers.filter(p => p.verification === level);
+  } else {
+    papers = papers.filter(p => p.cluster === activeCluster);
+  }
+
+  // Type filter
+  if (activeFilter === 'empirical') {
+    papers = papers.filter(p => {
+      const id = (p.identification || '').toLowerCase();
+      return id.includes('did') || id.includes('regression') || id.includes('panel') || id.includes('gmm') || id.includes('iv') || id.includes('fixed');
+    });
+  } else if (activeFilter === 'theoretical') {
+    papers = papers.filter(p => {
+      const id = (p.identification || '').toLowerCase();
+      return id.includes('model') || id.includes('theoretical') || id.includes('task-based') || id.includes('framework');
+    });
+  } else if (activeFilter === 'survey') {
+    papers = papers.filter(p => {
+      const id = (p.identification || '').toLowerCase();
+      return id.includes('survey') || id.includes('meta') || id.includes('review');
+    });
+  }
+
+  // Search
+  if (searchQuery) {
+    papers = papers.filter(p => {
+      const haystack = [p.citation, p.authors, p.findings, p.research_question, p.relevance, p.cluster, p.treatment, p.outcomes].join(' ').toLowerCase();
+      return haystack.includes(searchQuery);
+    });
+  }
+
+  return papers;
+}
+
+function openModal(pid) {
+  const p = PAPERS.find(x => x.pid === pid);
+  if (!p) return;
+  const synthLabel = p.synthesis === 'true' ? '✅ 纳入合成' : p.synthesis === 'needs_author' ? '⏳ 待确认' : '❌ 不纳入';
+  const verifLabel = p.verification === 'verified_primary' ? '✅ 一手来源' : '📄 二手来源';
+  const verifClass = p.verification === 'verified_primary' ? 'verified' : 'secondary';
+  const clusterIdx = CLUSTERS.indexOf(p.cluster);
+  const color = CLUSTER_COLORS[clusterIdx >= 0 ? clusterIdx : 0];
+  const html = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="color:${color};font-size:24px">${CLUSTER_EMOJI[p.cluster] || '📌'}</span>
+          <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:${color}18;color:${color}">${p.cluster}</span>
+        </div>
+        <h3>${p.citation}</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;font-size:12px;color:var(--text-secondary)">
+          <span>${p.year}</span> · <span>${p.status}</span> · <span>${p.venue || '—'}</span>
+        </div>
+        <div class="modal-section">
+          <h4>研究问题</h4>
+          <p>${p.research_question || '—'}</p>
+        </div>
+        <div class="modal-section">
+          <h4>样本 / 设定</h4>
+          <p>${p.setting || '—'}</p>
+        </div>
+        <div class="modal-section">
+          <h4>处理 / 暴露</h4>
+          <p>${p.treatment || '—'}</p>
+        </div>
+        <div class="modal-section">
+          <h4>结果变量</h4>
+          <p>${p.outcomes || '—'}</p>
+        </div>
+        <div class="modal-section">
+          <h4>识别策略</h4>
+          <p>${p.identification || '—'}</p>
+        </div>
+        <div class="modal-section">
+          <h4>固定效应 / 控制变量</h4>
+          <p>${p.fixed_effects || '—'}</p>
+        </div>
+        <div class="modal-section">
+          <h4>稳健性检验</h4>
+          <p>${p.validation || '—'}</p>
+        </div>
+        <div class="modal-section">
+          <h4>主要发现</h4>
+          <p>${p.findings || '—'}</p>
+        </div>
+        <div class="modal-section">
+          <h4>局限性</h4>
+          <p>${p.limitations || '—'}</p>
+        </div>
+        <div class="modal-section">
+          <h4>项目相关性</h4>
+          <p>${p.relevance || '—'}</p>
+        </div>
+        <div class="modal-section">
+          <h4>待决问题</h4>
+          <p>${p.open_questions || '—'}</p>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;font-size:11px;">
+          <span class="tag ${verifClass}">${verifLabel}</span>
+          <span class="tag synth">${synthLabel}</span>
+          <span class="tag">DOI: ${p.doi}</span>
+        </div>
+        <div class="modal-actions">
+          ${p.url ? `<a href="${p.url}" target="_blank" rel="noopener">🔗 查看原文</a>` : ''}
+          ${p.doi && !p.doi.startsWith('no_doi') ? `<a href="https://doi.org/${p.doi}" target="_blank" rel="noopener">📄 DOI页面</a>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-container').innerHTML = html;
+}
+
+function closeModal() {
+  document.getElementById('modal-container').innerHTML = '';
+}
+
+function render() {
+  const papers = getFiltered();
+  const content = document.getElementById('content');
+
+  if (papers.length === 0) {
+    content.innerHTML = `<div class="empty">
+      <h3>没有匹配结果</h3>
+      <p>尝试调整筛选条件或搜索关键词</p>
+    </div>`;
+    return;
+  }
+
+  if (view === 'list') {
+    // List view - simple chronological
+    const sorted = [...papers].sort((a,b) => parseInt(b.year) - parseInt(a.year));
+    let html = '<div class="papers-list">';
+    sorted.forEach(p => {
+      const verifTag = p.verification === 'verified_primary' ? '<span class="tag verified">一手</span>' : '<span class="tag secondary">二手</span>';
+      html += `
+        <div class="paper-row" onclick="openModal('${p.pid}')">
+          <span class="row-year">${p.year}</span>
+          <span class="row-citation">${p.citation}</span>
+          <span class="row-meta">${verifTag} <span style="color:var(--text-secondary);font-size:11px">${p.venue || ''}</span></span>
+        </div>
+      `;
+    });
+    html += '</div>';
+    content.innerHTML = html;
+  } else {
+    // Grid view - grouped by cluster
+    const byCluster = {};
+    papers.forEach(p => {
+      if (!byCluster[p.cluster]) byCluster[p.cluster] = [];
+      byCluster[p.cluster].push(p);
+    });
+
+    let html = '';
+    const orderedClusters = CLUSTERS.filter(c => byCluster[c]);
+    orderedClusters.forEach((c, ci) => {
+      const clusterPapers = byCluster[c];
+      const color = CLUSTER_COLORS[ci % CLUSTER_COLORS.length];
+      const emoji = CLUSTER_EMOJI[c] || '📌';
+      html += `<div class="cluster-section">
+        <div class="cluster-heading">
+          <span style="color:${color};font-size:20px">${emoji}</span>
+          <h2>${c}</h2>
+          <span class="badge">${clusterPapers.length} 篇</span>
+        </div>
+        <div class="papers-grid">`;
+
+      clusterPapers.forEach(p => {
+        const verifTag = p.verification === 'verified_primary' ? '<span class="tag verified">一手来源</span>' : '<span class="tag secondary">二手</span>';
+        const synthTag = p.synthesis === 'true' ? '<span class="tag synth">纳入合成</span>' : '';
+        html += `
+          <div class="paper-card" onclick="openModal('${p.pid}')">
+            <div class="card-header">
+              <span class="card-year">${p.year}</span>
+              <span class="card-title">${p.citation}</span>
+            </div>
+            <div class="card-meta">
+              <span>${p.venue || '—'}</span>
+              <span>${p.status}</span>
+            </div>
+            <div class="card-findings">${p.findings || '暂无摘要'}</div>
+            <div class="card-tags">
+              ${verifTag}
+              ${synthTag}
+              <span class="tag">${p.identification || '—'}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      html += '</div></div>';
+    });
+    content.innerHTML = html;
+  }
+}
+
+// Init
+buildClusterNav();
+render();
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    document.getElementById('search-input').focus();
+  }
+});
+</script>
+</body>
+</html>

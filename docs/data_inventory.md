@@ -8,7 +8,7 @@ This inventory is the source-of-record for dataset provenance and first-pass cov
 |---|---:|---|---|---|---|
 | Penn World Table | 11.0 | Primary GDP per capita, population, human capital, TFP, investment and trade shares | Dataverse DOI `10.34894/FABVLR` | `data/raw/pwt/pwt110.xlsx` | Implemented |
 | Maddison Project Database | 2023 | GDP per capita validation source | Dataverse DOI `10.34894/INZBF2` | `data/raw/maddison/mpd2023_web.xlsx` | Implemented |
-| World Development Indicators | Current API snapshot | Official GDP growth, population, trade, investment, sector shares, urbanization, life expectancy | World Bank API | `data/raw/wdi/*.json` | Implemented |
+| World Development Indicators | Current API snapshot | Official GDP growth, population, trade, investment, sector shares, urbanization, life expectancy | World Bank API | `data/raw/wdi/*.json` | Implemented (8/10 indicators; urbanization & life expectancy blocked) |
 
 ## Planned Follow-Up Modules
 
@@ -37,3 +37,10 @@ The pipeline writes these diagnostics after processing:
 - `reports/extreme_growth_annual.csv`
 - `reports/output_hashes.json`
 - `reports/validation_report.md`
+
+## Blocked / Pending Download
+
+| Indicator | Code | Blocked Reason |
+|---|---|---|
+| Urban population share | `SP.URB.TOTL.IN.ZS` | Raw file not yet downloaded (network timeout) |
+| Life expectancy at birth | `SP.DYN.LE00.IN` | Raw file not yet downloaded (network timeout) |

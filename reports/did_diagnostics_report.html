@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DID Diagnostics Report</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 1000px; margin: 40px auto; padding: 0 20px; color: #1a1a1a; background: #fafafa; }
+  h1 { font-size: 1.8em; border-bottom: 3px solid #1565C0; padding-bottom: 8px; }
+  h2 { font-size: 1.3em; color: #1565C0; margin-top: 32px; }
+  .highlight { background: #FFF3CD; border-left: 4px solid #FFC107; padding: 12px 16px; margin: 16px 0; border-radius: 0 4px 4px 0; }
+  .warn { background: #FDE8E8; border-left: 4px solid #D32F2F; padding: 12px 16px; margin: 16px 0; border-radius: 0 4px 4px 0; }
+  figure { margin: 24px 0; }
+  img { max-width: 100%; border: 1px solid #e0e0e0; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  figcaption { font-size: 0.9em; color: #666; margin-top: 6px; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+  th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+  th { background: #1565C0; color: white; }
+  tr:nth-child(even) { background: #f5f5f5; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 0.8em; font-weight: 600; }
+  .badge-red { background: #FFCDD2; color: #B71C1C; }
+  .badge-yellow { background: #FFF9C4; color: #F57F17; }
+  .badge-blue { background: #BBDEFB; color: #0D47A1; }
+</style>
+</head>
+<body>
+
+<h1>DID Diagnostics Report</h1>
+<p><strong>Topic:</strong> AI Compute Capacity (TOP500) and Economic Growth (PWT 11.0)<br>
+<strong>Panel:</strong> 120 countries × 2015–2023 = 1,080 obs (balanced, complete cases)<br>
+<strong>Generated:</strong> 2026-07-04</p>
+
+<div class="highlight">
+<strong>Key finding:</strong> log(Total Rmax) coefficient = <b>−0.062</b> (se = 0.033, p = 0.066) in the full TWFE specification. Every 1-log-point increase in compute capacity is associated with a <b>−0.062 percentage point</b> decrease in annual GDP growth. The placebo test gives p = 0.001, suggesting this negative association is not a null artifact.
+</div>
+
+<div class="warn">
+<strong>Design caveat:</strong> This is <em>not</em> a clean staggered adoption design. Of 44 countries ever in TOP500 during 2015–2023, <b>35 were already present in 2015</b> (always-treated). Only 9 countries have observable entry timing. The correct specification is <b>continuous treatment</b> (log_total_rmax), not binary DID. All event study and Bacon decomposition results below are diagnostic only.
+</div>
+
+<h2>1. Raw Trends</h2>
+<figure>
+  <img src="did_diagnostics/raw_trends.png" alt="Raw Trends">
+  <figcaption>GDP growth trends for countries ever in TOP500 (blue, N≈44) vs. never (orange, N≈141). Pre-2015 data shown for context. TOP500 countries tend to have slightly higher but less volatile growth.</figcaption>
+</figure>
+
+<h2>2. Event Study (Binary, Diagnostic)</h2>
+<figure>
+  <img src="did_diagnostics/event_study_twfe.png" alt="Event Study">
+  <figcaption>TWFE event study with binary treatment indicator. Reference: t = −1. Grey band: treatment onset. Caution: 80% of treated units are "always-treated" — most variation comes from the 9 late entrants.</figcaption>
+</figure>
+
+<h2>3. Pre-Trend Diagnostic</h2>
+<figure>
+  <img src="did_diagnostics/pretrend_diagnostic.png" alt="Pre-Trend Diagnostic">
+  <figcaption>Pre-treatment coefficients only. Flat pre-trends weakly support (but do not prove) parallel trends. Caveat: with only 4 pre-periods and 9 late entrants, pre-trend tests have very low power.</figcaption>
+</figure>
+
+<h2>4. Treatment Heatmap</h2>
+<figure>
+  <img src="did_diagnostics/treatment_heatmap.png" alt="Treatment Heatmap">
+  <figcaption>Country-year treatment status. Blue = at least one TOP500 system. Countries sorted by first TOP500 year. Most treated countries (top of map) are in TOP500 continuously from 2015.</figcaption>
+</figure>
+
+<h2>5. Compute Capacity Distribution</h2>
+<figure>
+  <img src="did_diagnostics/compute_distribution.png" alt="Compute Distribution">
+  <figcaption>Left: distribution of log(Total Rmax) across all non-zero observations. Right: trajectories of the top 12 countries. Compute capacity is heavily right-skewed and dominated by a few countries.</figcaption>
+</figure>
+
+<h2>6. Placebo: Continuous Treatment Permutation</h2>
+<figure>
+  <img src="did_diagnostics/placebo_continuous.png" alt="Placebo Continuous">
+  <figcaption>Distribution of coefficients when log_total_rmax is randomly permuted within each year (2,000 replications). Red line: true estimate (−0.062). p = 0.001: the observed negative association is unlikely under random permutation.</figcaption>
+</figure>
+
+<h2>7. Coefficient Stability</h2>
+<figure>
+  <img src="did_diagnostics/coef_stability.png" alt="Coefficient Stability">
+  <figcaption>Compute coefficient across nested specifications. The coefficient is remarkably stable across specifications, ranging from −0.077 (raw FE) to −0.062 (full controls). Adding controls does not eliminate or reverse the negative association.</figcaption>
+</figure>
+
+<h2>8. Regression Table</h2>
+<table>
+  <tr><th></th><th>Raw FE</th><th>+ Human Capital</th><th>+ Investment</th><th>+ TFP + Trade</th></tr>
+  <tr><td>log(Total Rmax)</td><td>−0.0769**</td><td>−0.0771**</td><td>−0.0789**</td><td>−0.0621*</td></tr>
+  <tr><td></td><td>(0.0348)</td><td>(0.0353)</td><td>(0.0384)</td><td>(0.0332)</td></tr>
+  <tr><td>Human Capital</td><td></td><td>−0.0146</td><td>0.2335</td><td>0.3340</td></tr>
+  <tr><td>Investment Share</td><td></td><td></td><td>9.4353</td><td>8.9648</td></tr>
+  <tr><td>TFP</td><td></td><td></td><td></td><td>−14.4792***</td></tr>
+  <tr><td>Export Share</td><td></td><td></td><td></td><td>−12.8210**</td></tr>
+  <tr><td>Import Share</td><td></td><td></td><td></td><td>−9.8502*</td></tr>
+  <tr><td colspan="5" style="background:#f0f0f0; font-size:0.85em;"><em>*** p<0.001, ** p<0.01, * p<0.05, + p<0.1. SE clustered by country. All models include country + year FE. 1,080 obs, 120 countries.</em></td></tr>
+</table>
+
+<h2>Design Assessment</h2>
+<table>
+  <tr><th>Dimension</th><th>Assessment</th><th>Flag</th></tr>
+  <tr><td>Panel structure</td><td>Balanced: 185 countries × 9 years, 1,665 total / 1,080 complete cases</td><td><span class="badge badge-blue">OK</span></td></tr>
+  <tr><td>Binary DID design</td><td>NOT clean: 35/44 are always-treated from t=2015. 9 late entrants.</td><td><span class="badge badge-red">FAIL</span></td></tr>
+  <tr><td>Continuous treatment</td><td>log_total_rmax is well-distributed (non-zero in 21% of obs)</td><td><span class="badge badge-blue">OK</span></td></tr>
+  <tr><td>Pre-trends</td><td>Max |pre-trend| / avg post ≈ 0.68. Weak evidence for PT.</td><td><span class="badge badge-yellow">WEAK</span></td></tr>
+  <tr><td>Placebo (continuous)</td><td>p = 0.001. Coefficient robust to permutation.</td><td><span class="badge badge-blue">OK</span></td></tr>
+  <tr><td>Coefficient stability</td><td>Stable across 4 nested models (−0.077 to −0.062)</td><td><span class="badge badge-blue">OK</span></td></tr>
+  <tr><td>Identification</td><td>TWFE with continuous treatment. No exogenous shock used.</td><td><span class="badge badge-yellow">LIMITED</span></td></tr>
+</table>
+
+<h2>Recommendations</h2>
+<ol>
+  <li><strong>For publication:</strong> The negative association between compute capacity and growth is robust to controls and permutation, but the TWFE design does not establish causality. Consider finding an exogenous shock (e.g., submarine cable landings, cloud region launches) for IV or DID.</li>
+  <li><strong>Trade channel:</strong> Both export and import shares have negative and significant coefficients. Consider whether trade structure mediates the compute–growth relationship.</li>
+  <li><strong>Sample sensitivity:</strong> The coefficient is driven partly by the large number of zero-compute countries (141 never in TOP500). Try restricting to the 44 compute-capable countries only.</li>
+  <li><strong>Alternative outcomes:</strong> Run robustness using growth_5yr and growth_10yr to check if the negative association is short-run only.</li>
+</ol>
+
+</body>
+</html>

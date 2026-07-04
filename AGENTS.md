@@ -124,3 +124,57 @@
 | CEPII GeoDist | — | 距离、内陆国、语言、边界、殖民关系 | 📋 计划中 |
 | Barro-Lee | — | 教育成就与就学结构 | 📋 计划中 |
 | UN WPP | 2024 | 年龄结构、人口、预期寿命 | 📋 计划中 |
+
+
+## 七、对 AI Agent 的坑位警示
+
+以下是根据本项目中 agent 多次踩坑总结的操作纪律，每次 pipeline 修改前务必温习。
+
+### 7.1 Pipeline 运行：只跑必要的步骤
+
+- `scripts/run_pipeline.py` 会先调用 `download_data.py`，而本项目网速慢、WDI API 经常超时。**如果需要重新构建面板但不需要重新下载数据，务必直接运行 `build_panels.py` 而不是 `run_pipeline.py`**。除非 Adrian 明确要求重新下载，否则只改 `build_panels.py` 并直接运行它。
+- 同理，改了 `validate_outputs.py` 只跑它，不要重跑整个 pipeline。
+
+### 7.2 WDI 数据获取：用最大的 `per_page` 避免分页超时
+
+- WDI API 分页请求会导致连接池超时（每页一次 TCP 握手 + SSL + 传输），在网速差的环境下极易失败。
+- **一次性下载时设 `per_page=30000`**（远大于 indicator 实际记录数），避免分页。
+- 如果 API 仍然超时，考虑用 `wbdata` 库（但它的 `date` 参数格式不同，需要手动过滤年份）。
+- `build_panels.py` 的 `clean_wdi()` 和 `require_raw_inputs()` **已经做了容错**：缺失的 WDI indicator 文件会打印警告并跳过，不会中断整个 pipeline。如果某个 WDI 指标的 raw JSON 不在 `data/raw/wdi/` 下，pipeline 会自动跳过它。不要因为一两个缺失指标让整个面板构建失败。
+- 缺失的指标需要在 `docs/variable_dictionary.csv` 中将状态标为 `blocked`，并在 `docs/data_inventory.md` 中注明原因。
+
+### 7.3 Polars API 陷阱
+
+- `pl.Series` 没有 `.height` 属性，用 `.len()`。
+- 不要用 `reset_index()` 或 `set_index()`——Polars 不支持 pandas 风格的索引操作。
+- 使用 `pl.read_parquet()` 而非 pandas 的 `read_parquet()`。
+- `df[col].null_count()` 返回的是 `int`，不需要 `.len()`。
+
+### 7.4 面板合并：不要破坏主键唯一性
+
+- `iso3 + year` 是唯一主键。合并 WDI、Maddison 到 PWT 后，**务必检查是否有 duplicated keys**。
+- 如果某个 merge 引入了重复行（如 WDI 中同一国家-年份有多个 `country_wdi` 变体），在 pivot 后检查行数是否与 PWT 基准一致。
+
+### 7.5 `apply_patch` 命令格式
+
+- 使用 `*** Begin Patch` / `*** End Patch` 包裹。
+- 每行 patch 不额外加反引号或其他包裹符号。
+- 如果多次尝试 `apply_patch` 失败，直接用 Python heredoc (`python3 << 'PYEOF'`) 编辑文件——简单可靠。
+
+### 7.6 工具选择
+
+- 使用 `rg`（ripgrep）而非 `grep` 做文本搜索。
+- 网页审计报告直接用 Python 生成 HTML——polars 读数据、`html.escape()` 处理转义、字符串拼接输出，不需要外部报告库。
+- 如果需要从 World Bank API 下载数据，优先用 `requests` + `per_page=30000`，备选 `wbdata` 库。不要用 `download_data.py` 的默认分页设置（`per_page=500` 在慢网下会超时）。
+- WDI 的 indicator code 末尾 `.ZS` 表示 percent of total，`.KD.ZG` 表示 constant-price growth rate——不要在变量字典里写错单位。
+
+### 7.7 验证报告完整性
+
+- `validate_outputs.py` 会生成以下所有报告文件，缺一不可：
+  - `reports/validation_report.md`
+  - `reports/extreme_growth_annual.csv`
+  - `reports/source_consistency.csv`
+  - `reports/output_hashes.json`
+  - `reports/coverage_report.html`
+  - `reports/coverage_table.csv`
+- 每次修改 pipeline 后，必须确认以上 6 个文件全部存在且时间戳更新。
