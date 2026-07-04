@@ -1,0 +1,33 @@
+{
+  "panel": {
+    "rows": 11840,
+    "columns": 36,
+    "countries": 185,
+    "years": "1960-2023",
+    "unit": "country-year",
+    "pk": "iso3+year"
+  },
+  "outcome": {
+    "var": "growth_annual",
+    "N": 10426,
+    "mean": 0.018722502177035437,
+    "std": 0.06479920817241862
+  },
+  "key_predictor": {
+    "var": "log_total_rmax",
+    "N_nonzero": 937,
+    "mean_nonzero": 10.790823075369435
+  },
+  "sources": [
+    "PWT 11.0",
+    "Maddison 2023",
+    "TOP500 1993-2025"
+  ],
+  "merge_key": "iso3 + year (exact equality)",
+  "imputation": "none (no mean imputation, no cross-country interpolation)",
+  "lag": "controls lagged 1 year",
+  "se": "clustered at country level",
+  "fixed_effects": "country + year",
+  "winsor": "growth_annual at p1-p99",
+  "trade_note": "pwt_import_share = csh_m from PWT (negative by convention = -imports/GDP). Use pwt_import_share_abs or pwt_trade_openness."
+}
